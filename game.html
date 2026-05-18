@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我是环境检察员 - 塔防游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #0f3460;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .gold-panel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffd700;
+            font-size: 14px;
+        }
+
+        .life-panel {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .heart {
+            color: #e74c3c;
+            font-size: 16px;
+        }
+
+        .wave-panel {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #4ecdc4;
+            font-size: 14px;
+        }
+
+        .start-btn {
+            height: 32px;
+            padding: 0 15px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .game-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            width: 32%;
+            background: #16213e;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .monster-title {
+            font-size: 12px;
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .monster-card {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .monster-emoji {
+            font-size: 20px;
+        }
+
+        .monster-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .monster-info {
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .monster-hp {
+            color: #e74c3c;
+        }
+
+        .monster-speed {
+            color: #f39c12;
+        }
+
+        .center-panel {
+            flex: 1;
+            background: #2d5a27;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tower-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tower-card {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tower-card.selected {
+            border-color: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        }
+
+        .tower-emoji {
+            font-size: 22px;
+        }
+
+        .tower-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .tower-cost {
+            font-size: 10px;
+            color: #ffd700;
+        }
+
+        .tower-damage {
+            font-size: 10px;
+            color: #4ecdc4;
+        }
+
+        .bottom-towers {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .bottom-slot {
+            flex: 1;
+            height: 60px;
+            background: #8b6914;
+            border-radius: 8px;
+            border: 2px dashed #a08020;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bottom-slot:hover {
+            background: #9b7924;
+        }
+
+        .right-panel {
+            width: 18%;
+            background: #4a5a3d;
+            padding: 10px;
+        }
+
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            height: 100%;
+        }
+
+        .wall-cell {
+            background: #5a6a4d;
+            border: 2px dashed #6b7a5d;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .wall-cell:hover {
+            background: #6a7a5d;
+        }
+
+        .wall-cell.placed {
+            background: #3a4a2d;
+            border-color: #27ae60;
+        }
+
+        .locked {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="back-btn">◀ 返回</div>
+        <div class="gold-panel">💰 金币: 300</div>
+        <div class="life-panel">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+        </div>
+        <div class="wave-panel">🌊 第1波</div>
+        <button class="start-btn" id="startBtn">🚀 开始进攻</button>
+    </div>
+
+    <div class="game-container">
+        <div class="left-panel">
+            <div class="monster-title">
+                <span>👹</span>
+                <span>怪兽信息</span>
+            </div>
+            <div class="monster-grid">
+                <div class="monster-card">
+                    <span class="monster-emoji">🗑️</span>
+                    <div class="monster-name">垃圾怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 50</span>
+                        <span class="monster-speed">⚡ 速度: 快</span>
+                    </div>
+                </div>
+                <div class="monster-card">
+                    <span class="monster-emoji">💨</span>
+                    <div class="monster-name">废气怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 80</span>
+                        <span class="monster-speed">⚡ 速度: 中</span>
+                    </div>
+                </div>
+                <div class="monster-card">
+                    <span class="monster-emoji">💀</span>
+                    <div class="monster-name">污染王</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 150</span>
+                        <span class="monster-speed">⚡ 速度: 慢</span>
+                    </div>
+                </div>
+                <div class="monster-card">
+                    <span class="monster-emoji">🦠</span>
+                    <div class="monster-name">病毒怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 200</span>
+                        <span class="monster-speed">⚡ 速度: 中</span>
+                    </div>
+                </div>
+                <div class="monster-card locked">
+                    <span class="monster-emoji">🧴</span>
+                    <div class="monster-name">塑料怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 100</span>
+                        <span class="monster-speed">⚡ 速度: 快</span>
+                    </div>
+                </div>
+                <div class="monster-card locked">
+                    <span class="monster-emoji">🔋</span>
+                    <div class="monster-name">电池怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 120</span>
+                        <span class="monster-speed">⚡ 速度: 中</span>
+                    </div>
+                </div>
+                <div class="monster-card locked">
+                    <span class="monster-emoji">🛢️</span>
+                    <div class="monster-name">油污怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 180</span>
+                        <span class="monster-speed">⚡ 速度: 慢</span>
+                    </div>
+                </div>
+                <div class="monster-card locked">
+                    <span class="monster-emoji">☢️</span>
+                    <div class="monster-name">辐射怪</div>
+                    <div class="monster-info">
+                        <span class="monster-hp">❤️ HP: 250</span>
+                        <span class="monster-speed">⚡ 速度: 慢</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="center-panel">
+            <div class="tower-grid">
+                <div class="tower-card" data-tower="basic" data-cost="50">
+                    <span class="tower-emoji">🌿</span>
+                    <div class="tower-name">基础塔</div>
+                    <div class="tower-cost">💰 50</div>
+                    <div class="tower-damage">每秒射线 伤害: 10</div>
+                </div>
+                <div class="tower-card" data-tower="water" data-cost="80">
+                    <span class="tower-emoji">💧</span>
+                    <div class="tower-name">净水塔</div>
+                    <div class="tower-cost">💰 80</div>
+                    <div class="tower-damage">每秒水滴 伤害: 10 + 减速</div>
+                </div>
+                <div class="tower-card" data-tower="light" data-cost="120">
+                    <span class="tower-emoji">☀️</span>
+                    <div class="tower-name">光能塔</div>
+                    <div class="tower-cost">💰 120</div>
+                    <div class="tower-damage">每2秒炸弹 范围25</div>
+                </div>
+                <div class="tower-card" data-tower="rainbow" data-cost="180">
+                    <span class="tower-emoji">🌈</span>
+                    <div class="tower-name">彩虹塔</div>
+                    <div class="tower-cost">💰 180</div>
+                    <div class="tower-damage">每秒弧线 伤害: 40 穿透</div>
+                </div>
+                <div class="tower-card locked" data-tower="wind" data-cost="150">
+                    <span class="tower-emoji">🌀</span>
+                    <div class="tower-name">风力塔</div>
+                    <div class="tower-cost">💰 150</div>
+                    <div class="tower-damage">伤害: 30</div>
+                </div>
+                <div class="tower-card locked" data-tower="solar" data-cost="200">
+                    <span class="tower-emoji">🔆</span>
+                    <div class="tower-name">太阳能塔</div>
+                    <div class="tower-cost">💰 200</div>
+                    <div class="tower-damage">伤害: 35</div>
+                </div>
+                <div class="tower-card locked" data-tower="purify" data-cost="250">
+                    <span class="tower-emoji">🧪</span>
+                    <div class="tower-name">净化塔</div>
+                    <div class="tower-cost">💰 250</div>
+                    <div class="tower-damage">伤害: 50</div>
+                </div>
+                <div class="tower-card locked" data-tower="thunder" data-cost="300">
+                    <span class="tower-emoji">⚡</span>
+                    <div class="tower-name">雷电塔</div>
+                    <div class="tower-cost">💰 300</div>
+                    <div class="tower-damage">伤害: 60</div>
+                </div>
+            </div>
+            <div class="bottom-towers">
+                <div class="bottom-slot"></div>
+                <div class="bottom-slot"></div>
+                <div class="bottom-slot"></div>
+                <div class="bottom-slot"></div>
+                <div class="bottom-slot locked"></div>
+                <div class="bottom-slot locked"></div>
+                <div class="bottom-slot locked"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="wall-grid">
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+                <div class="wall-cell"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedTower = null;
+        let selectedTowerName = '';
+
+        document.querySelectorAll('.tower-card').forEach(card => {
+            card.addEventListener('click', () => {
+                if (card.classList.contains('used') || card.classList.contains('locked')) return;
+                document.querySelectorAll('.tower-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedTower = card.dataset.tower;
+                selectedTowerName = card.querySelector('.tower-name').textContent;
+            });
+        });
+
+        document.querySelectorAll('.bottom-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                if (slot.textContent && !slot.classList.contains('locked')) {
+                    const towerName = slot.dataset.tower;
+                    slot.textContent = '';
+                    slot.dataset.tower = '';
+                    document.querySelectorAll('.tower-card').forEach(c => {
+                        if (c.dataset.tower === towerName) {
+                            c.classList.remove('used');
+                        }
+                    });
+                } else if (selectedTower) {
+                    const emojis = {
+                        'basic': '🌿',
+                        'water': '💧',
+                        'light': '☀️',
+                        'rainbow': '🌈',
+                        'wind': '🌀',
+                        'solar': '🔆',
+                        'purify': '🧪',
+                        'thunder': '⚡'
+                    };
+                    slot.textContent = emojis[selectedTower];
+                    slot.dataset.tower = selectedTower;
+                    document.querySelectorAll('.tower-card').forEach(c => c.classList.remove('selected'));
+                    document.querySelector(`.tower-card[data-tower="${selectedTower}"]`).classList.add('used');
+                    selectedTower = null;
+                }
+            });
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const slots = document.querySelectorAll('.bottom-slot');
+            const towers = [];
+            slots.forEach(slot => {
+                towers.push(slot.textContent || '');
+            });
+            localStorage.setItem('battleTowers', JSON.stringify(towers));
+            window.location.href = 'battle.html';
+        });
+
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.location.href = 'levels.html';
+        });
+    </script>
+</body>
+</html>

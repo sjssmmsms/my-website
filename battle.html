@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我是环境检察员 - 战斗场景</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .status-bar {
+            height: 36px;
+            background: #0f3460;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .back-btn {
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .gold-panel {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ffd700;
+            font-size: 12px;
+        }
+
+        .life-panel {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .heart {
+            color: #e74c3c;
+            font-size: 14px;
+        }
+
+        .wave-panel {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: #4ecdc4;
+            font-size: 12px;
+        }
+
+        .battle-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .left-spawn {
+            width: 8%;
+            background: #5a4a3a;
+            border-right: 2px solid #e74c3c;
+            position: relative;
+        }
+
+        .spawn-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, transparent 0%, #e74c3c 50%, transparent 100%);
+        }
+
+        .center-battle {
+            flex: 1;
+            background: #2d5a27;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .monster {
+            position: absolute;
+            font-size: 24px;
+        }
+
+        .right-wall {
+            width: 18%;
+            background: #4a5a3d;
+            padding: 5px;
+        }
+
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            height: 100%;
+        }
+
+        .wall-cell {
+            background: #5a6a4d;
+            border: 1px dashed #6b7a5d;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .wall-cell:hover {
+            background: #6a7a5d;
+        }
+
+        .wall-cell.placed {
+            background: #3a4a2d;
+            border-color: #27ae60;
+        }
+
+        .bottom-towers {
+            position: absolute;
+            bottom: 0;
+            left: 8%;
+            right: 18%;
+            height: 50px;
+            display: flex;
+            gap: 6px;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .tower-slot {
+            flex: 1;
+            background: #8b6914;
+            border-radius: 6px;
+            border: 2px dashed #a08020;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .tower-slot:hover {
+            background: #9b7924;
+        }
+
+        .projectile {
+            position: absolute;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .pause-btn {
+            height: 30px;
+            padding: 0 12px;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pause-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pause-overlay.show {
+            display: flex;
+        }
+
+        .pause-menu {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .pause-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .pause-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pause-menu-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pause-menu-btn.resume {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .pause-menu-btn.exit {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .pause-menu-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .explosion {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+            animation: explode 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes explode {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+                transform: scale(0.5);
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                width: 56px;
+                height: 56px;
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="back-btn">◀ 返回</div>
+        <div class="gold-panel">💰 300</div>
+        <div class="life-panel">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+        </div>
+        <div class="wave-panel">🌊 第1波</div>
+        <button class="pause-btn" id="pauseBtn">⏸️ 暂停</button>
+    </div>
+
+    <div class="battle-container">
+        <div class="left-spawn">
+            <div class="spawn-line"></div>
+        </div>
+
+        <div class="center-battle">
+            <div class="bottom-towers" id="towerSlots">
+                <div class="tower-slot" data-slot="0"></div>
+                <div class="tower-slot" data-slot="1"></div>
+                <div class="tower-slot" data-slot="2"></div>
+                <div class="tower-slot" data-slot="3"></div>
+                <div class="tower-slot" data-slot="4"></div>
+                <div class="tower-slot" data-slot="5"></div>
+                <div class="tower-slot" data-slot="6"></div>
+            </div>
+        </div>
+
+        <div class="right-wall">
+            <div class="wall-grid" id="wallGrid">
+                <div class="wall-cell" data-wall="0"></div>
+                <div class="wall-cell" data-wall="1"></div>
+                <div class="wall-cell" data-wall="2"></div>
+                <div class="wall-cell" data-wall="3"></div>
+                <div class="wall-cell" data-wall="4"></div>
+                <div class="wall-cell" data-wall="5"></div>
+                <div class="wall-cell" data-wall="6"></div>
+                <div class="wall-cell" data-wall="7"></div>
+                <div class="wall-cell" data-wall="8"></div>
+                <div class="wall-cell" data-wall="9"></div>
+                <div class="wall-cell" data-wall="10"></div>
+                <div class="wall-cell" data-wall="11"></div>
+                <div class="wall-cell" data-wall="12"></div>
+                <div class="wall-cell" data-wall="13"></div>
+                <div class="wall-cell" data-wall="14"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pause-overlay" id="pauseOverlay">
+        <div class="pause-menu">
+            <div class="pause-title">⏸️ 游戏暂停</div>
+            <div class="pause-btn-group">
+                <button class="pause-menu-btn resume" id="resumeBtn">▶️ 继续游戏</button>
+                <button class="pause-menu-btn exit" id="exitBtn">🚪 退出关卡</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let towers = ['', '', '', '', '', '', ''];
+        let selectedSlot = null;
+        let monsters = [];
+        let monsterId = 0;
+        let lives = 6;
+        let score = 0;
+        let projectiles = [];
+        let isPaused = false;
+        let spawnInterval = null;
+        let activeRainbowTowers = new Set();
+        let activeBombTowers = new Set();
+
+        const towerInfo = {
+            '🌿': { damage: 10, interval: 1000, type: 'ray', name: 'basic' },
+            '💧': { damage: 10, interval: 1000, type: 'water', name: 'water' },
+            '☀️': { damage: 25, interval: 1000, type: 'bomb', name: 'light' },
+            '🌈': { damage: 40, interval: 1000, type: 'rainbow', name: 'rainbow' }
+        };
+
+        function loadTowers() {
+            const savedTowers = localStorage.getItem('battleTowers');
+            if (savedTowers) {
+                towers = JSON.parse(savedTowers);
+            }
+            const towerSlots = document.querySelectorAll('.tower-slot');
+            towerSlots.forEach((slot, index) => {
+                slot.textContent = towers[index] || '';
+                slot.classList.remove('selected');
+            });
+            selectedSlot = null;
+            startTowerAttacks();
+        }
+
+        function spawnMonster() {
+            const types = ['🗑️', '💨', '💀', '🦠'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            const monster = document.createElement('div');
+            monster.className = 'monster';
+            monster.textContent = type;
+            monster.style.left = '8%';
+            monster.style.top = Math.random() * 50 + 20 + '%';
+            monster.dataset.id = monsterId++;
+            monster.dataset.type = type;
+            monster.dataset.hp = type === '🗑️' ? 50 : type === '💨' ? 80 : type === '💀' ? 150 : 200;
+            monster.dataset.slowed = '0';
+            monster.dataset.slowEnd = '0';
+            
+            document.querySelector('.center-battle').appendChild(monster);
+            monsters.push(monster);
+            
+            moveMonster(monster);
+        }
+
+        function moveMonster(monster) {
+            let left = 8;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const now = Date.now();
+                const speed = parseInt(monster.dataset.slowed) === 1 && now < parseInt(monster.dataset.slowEnd) ? 0.15 : 0.3;
+                left += speed;
+                monster.style.left = left + '%';
+                
+                if (left >= 95) {
+                    const monsterTop = parseFloat(monster.style.top);
+                    if (checkWallCollision(monsterTop)) {
+                        clearInterval(interval);
+                        monster.remove();
+                        monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        loseLife();
+                    } else if (left >= 100) {
+                        clearInterval(interval);
+                        monster.remove();
+                        monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        loseLife();
+                    }
+                }
+            }, 50);
+            
+            monster.dataset.moveInterval = interval;
+        }
+
+        function checkWallCollision(monsterTop) {
+            const wallCells = document.querySelectorAll('.wall-cell.placed');
+            for (const cell of wallCells) {
+                const cellRect = cell.getBoundingClientRect();
+                const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+                const cellTopPercent = ((cellRect.top - battleRect.top) / battleRect.height) * 100;
+                const cellHeightPercent = (cellRect.height / battleRect.height) * 100;
+                
+                if (monsterTop >= cellTopPercent && monsterTop <= cellTopPercent + cellHeightPercent) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function loseLife() {
+            lives--;
+            const hearts = document.querySelectorAll('.heart');
+            if (lives >= 0) {
+                hearts[lives].style.opacity = '0.3';
+            }
+            
+            if (lives <= 0) {
+                window.location.href = 'gameover.html';
+            }
+        }
+
+        function startTowerAttacks() {
+            const wallCells = document.querySelectorAll('.wall-cell');
+            wallCells.forEach((cell, index) => {
+                const towerEmoji = cell.textContent;
+                if (towerEmoji && towerInfo[towerEmoji]) {
+                    const info = towerInfo[towerEmoji];
+                    setInterval(() => {
+                        if (!isPaused && cell.textContent === towerEmoji) {
+                            attackFromTower(cell, towerEmoji, info);
+                        }
+                    }, info.interval);
+                }
+            });
+        }
+
+        function attackFromTower(cell, emoji, info) {
+            const rect = cell.getBoundingClientRect();
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            const startX = rect.left - battleRect.left;
+            const startY = rect.top - battleRect.top + rect.height / 2;
+            const cellIndex = cell.dataset.wall;
+            
+            if (monsters.length === 0) return;
+            
+            if (info.type === 'rainbow') {
+                if (activeRainbowTowers.has(cellIndex)) return;
+                activeRainbowTowers.add(cellIndex);
+            }
+            
+            if (info.type === 'bomb') {
+                if (activeBombTowers.has(cellIndex)) return;
+                activeBombTowers.add(cellIndex);
+            }
+            
+            const targetMonster = findNearestMonster(startX, startY);
+            
+            if (info.type === 'ray' || info.type === 'water') {
+                shootRay(startX, startY, targetMonster, emoji, info);
+            } else if (info.type === 'bomb') {
+                throwBomb(startX, startY, targetMonster, emoji, info, cellIndex);
+            } else if (info.type === 'rainbow') {
+                shootRainbow(startX, startY, targetMonster, emoji, info, cellIndex);
+            }
+        }
+
+        function findNearestMonster(x, y) {
+            let nearest = null;
+            let minDistance = Infinity;
+            
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+                const monX = monRect.left - battleRect.left + monRect.width / 2;
+                const monY = monRect.top - battleRect.top + monRect.height / 2;
+                const distance = Math.sqrt(Math.pow(monX - x, 2) + Math.pow(monY - y, 2));
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = monster;
+                }
+            });
+            
+            return nearest;
+        }
+
+        function shootRay(x, y, targetMonster, emoji, info) {
+            if (!targetMonster) return;
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.textContent = info.type === 'water' ? '💧' : '✦';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            projectile.dataset.damage = info.damage;
+            projectile.dataset.type = info.type;
+            
+            document.querySelector('.center-battle').appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - battleRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - battleRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 12;
+            const vy = (dy / distance) * 12;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left);
+                const currentY = parseFloat(projectile.style.top);
+                projectile.style.left = (currentX + vx) + 'px';
+                projectile.style.top = (currentY + vy) + 'px';
+                
+                if (currentX > window.innerWidth || currentX < 0 || currentY > window.innerHeight || currentY < 0) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    return;
+                }
+                
+                checkMonsterHit(projectile, info);
+            }, 15);
+        }
+
+        function throwBomb(x, y, targetMonster, emoji, info, cellIndex) {
+            if (!targetMonster) {
+                activeBombTowers.delete(cellIndex);
+                return;
+            }
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.textContent = '💥';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            projectile.dataset.damage = info.damage;
+            projectile.dataset.type = 'bomb';
+            projectile.dataset.active = '1';
+            
+            const battleArea = document.querySelector('.center-battle');
+            battleArea.appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - battleRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - battleRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 8;
+            const vy = (dy / distance) * 8;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left);
+                const currentY = parseFloat(projectile.style.top);
+                projectile.style.left = (currentX + vx) + 'px';
+                projectile.style.top = (currentY + vy) + 'px';
+                
+                if (currentX > battleRect.width + 50 || currentX < -50 || currentY > battleRect.height + 50 || currentY < -50) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    activeBombTowers.delete(cellIndex);
+                    return;
+                }
+                
+                checkBombHit(projectile, info, cellIndex, interval);
+            }, 15);
+        }
+
+        function shootRainbow(x, y, targetMonster, emoji, info, cellIndex) {
+            if (!targetMonster) {
+                activeRainbowTowers.delete(cellIndex);
+                return;
+            }
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.textContent = '🌈';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            projectile.dataset.damage = info.damage;
+            projectile.dataset.type = 'rainbow';
+            projectile.style.fontSize = '20px';
+            
+            document.querySelector('.center-battle').appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - battleRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - battleRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 10;
+            const vy = (dy / distance) * 10;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left);
+                const currentY = parseFloat(projectile.style.top);
+                projectile.style.left = (currentX + vx) + 'px';
+                projectile.style.top = (currentY + vy) + 'px';
+                
+                if (currentX > window.innerWidth + 50 || currentX < -50 || currentY > window.innerHeight + 50 || currentY < -50) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    activeRainbowTowers.delete(cellIndex);
+                    return;
+                }
+                
+                checkRainbowHit(projectile, info);
+            }, 15);
+        }
+
+        function checkMonsterHit(projectile, info) {
+            const projRect = projectile.getBoundingClientRect();
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                const relX = monRect.left - battleRect.left;
+                const relY = monRect.top - battleRect.top;
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left &&
+                    projRect.top < monRect.bottom &&
+                    projRect.bottom > monRect.top) {
+                    
+                    monster.dataset.hp = parseInt(monster.dataset.hp) - info.damage;
+                    
+                    if (info.type === 'water') {
+                        monster.dataset.slowed = '1';
+                        monster.dataset.slowEnd = Date.now() + 3000;
+                    }
+                    
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    
+                    if (parseInt(monster.dataset.hp) <= 0) {
+                        monster.remove();
+                        monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                    }
+                }
+            });
+        }
+
+        function checkBombHit(projectile, info, cellIndex, interval) {
+            if (parseInt(projectile.dataset.active) === 0) return;
+            
+            const projRect = projectile.getBoundingClientRect();
+            const battleRect = document.querySelector('.center-battle').getBoundingClientRect();
+            
+            let hit = false;
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left && 
+                    projRect.top < monRect.bottom && 
+                    projRect.bottom > monRect.top) {
+                    hit = true;
+                }
+            });
+            
+            if (hit) {
+                projectile.dataset.active = '0';
+                
+                const projCenterX = projRect.left - battleRect.left + projRect.width / 2;
+                const projCenterY = projRect.top - battleRect.top + projRect.height / 2;
+                
+                createExplosion(projCenterX, projCenterY);
+                
+                monsters.forEach(monster => {
+                    const monRect = monster.getBoundingClientRect();
+                    const monCenterX = monRect.left - battleRect.left + monRect.width / 2;
+                    const monCenterY = monRect.top - battleRect.top + monRect.height / 2;
+                    const distance = Math.sqrt(Math.pow(monCenterX - projCenterX, 2) + Math.pow(monCenterY - projCenterY, 2));
+                    
+                    if (distance < 56) {
+                        monster.dataset.hp = parseInt(monster.dataset.hp) - info.damage;
+                        
+                        if (parseInt(monster.dataset.hp) <= 0) {
+                            monster.remove();
+                            monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        }
+                    }
+                });
+                
+                projectile.remove();
+                projectiles = projectiles.filter(p => p !== projectile);
+                activeBombTowers.delete(cellIndex);
+                if (interval) {
+                    clearInterval(interval);
+                }
+            }
+        }
+
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = (x - 28) + 'px';
+            explosion.style.top = (y - 28) + 'px';
+            explosion.style.width = '56px';
+            explosion.style.height = '56px';
+            
+            document.querySelector('.center-battle').appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+
+        function checkRainbowHit(projectile, info) {
+            const projRect = projectile.getBoundingClientRect();
+            
+            if (!projectile.dataset.hitMonsters) {
+                projectile.dataset.hitMonsters = '';
+            }
+            const hitMonsters = projectile.dataset.hitMonsters.split(',').filter(id => id);
+            
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left &&
+                    projRect.top < monRect.bottom &&
+                    projRect.bottom > monRect.top) {
+                    
+                    if (!hitMonsters.includes(monster.dataset.id)) {
+                        monster.dataset.hp = parseInt(monster.dataset.hp) - info.damage;
+                        projectile.dataset.hitMonsters += ',' + monster.dataset.id;
+                        
+                        if (parseInt(monster.dataset.hp) <= 0) {
+                            monster.remove();
+                            monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        }
+                    }
+                }
+            });
+        }
+
+        document.querySelectorAll('.tower-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                if (slot.textContent) {
+                    document.querySelectorAll('.tower-slot').forEach(s => s.classList.remove('selected'));
+                    slot.classList.add('selected');
+                    selectedSlot = slot;
+                }
+            });
+        });
+
+        document.querySelectorAll('.wall-cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                if (cell.classList.contains('placed')) {
+                    cell.classList.remove('placed');
+                    cell.textContent = '';
+                } else if (selectedSlot && selectedSlot.textContent) {
+                    cell.classList.add('placed');
+                    cell.textContent = selectedSlot.textContent;
+                    selectedSlot.classList.remove('selected');
+                    selectedSlot = null;
+                    startTowerAttacks();
+                }
+            });
+        });
+
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.location.href = 'game.html';
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            pauseGame();
+        });
+
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            resumeGame();
+        });
+
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            window.location.href = 'levels.html';
+        });
+
+        function pauseGame() {
+            isPaused = true;
+            document.getElementById('pauseOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            monsters.forEach(monster => {
+                monster.style.animationPlayState = 'paused';
+            });
+            
+            projectiles.forEach(proj => {
+                proj.style.animationPlayState = 'paused';
+            });
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            document.getElementById('pauseOverlay').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            
+            monsters.forEach(monster => {
+                monster.style.animationPlayState = 'running';
+            });
+            
+            projectiles.forEach(proj => {
+                proj.style.animationPlayState = 'running';
+            });
+        }
+
+        function spawnMonsterIfNotPaused() {
+            if (!isPaused) {
+                spawnMonster();
+            }
+        }
+
+        loadTowers();
+        setTimeout(spawnMonsterIfNotPaused, 2000);
+        spawnInterval = setInterval(spawnMonsterIfNotPaused, 3000);
+    </script>
+</body>
+</html>
