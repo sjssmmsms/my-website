@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胜利 - 我是环境检察员</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .victory-title {
+            font-size: 72px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .victory-text {
+            font-size: 36px;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .stats {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 20px;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .stars {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+
+        .star {
+            display: inline-block;
+            margin: 0 5px;
+            animation: twinkle 1s infinite;
+        }
+
+        .star:nth-child(2) { animation-delay: 0.3s; }
+        .star:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="victory-title">🎉</div>
+        <div class="victory-text">恭喜你获得胜利!</div>
+        
+        <div class="stars">
+            <span class="star">⭐</span>
+            <span class="star">⭐</span>
+            <span class="star">⭐</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">通过的波次</span>
+                <span class="stat-value" id="waves">10</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">剩余生命</span>
+                <span class="stat-value" id="lives">6</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">获得金币</span>
+                <span class="stat-value" id="gold">300</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="restartGame()">🔄 再来一局</button>
+            <button class="btn btn-secondary" onclick="goHome()">🏠 返回主页</button>
+        </div>
+    </div>
+
+    <script>
+        function loadStats() {
+            const result = localStorage.getItem('battleResult');
+            if (result) {
+                const data = JSON.parse(result);
+                document.getElementById('waves').textContent = data.waves;
+                document.getElementById('lives').textContent = data.lives;
+                document.getElementById('gold').textContent = data.gold;
+            }
+        }
+
+        function restartGame() {
+            window.location.href = 'game.html';
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>
