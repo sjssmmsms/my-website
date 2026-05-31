@@ -1,0 +1,4140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="环境检察员">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- 防止缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>我是环境检察员 - 战斗场景</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .status-bar {
+            height: 44px;
+            height: calc(44px + env(safe-area-inset-top));
+            padding-top: env(safe-area-inset-top);
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: calc(15px + env(safe-area-inset-left));
+            padding-right: calc(15px + env(safe-area-inset-right));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-2px);
+        }
+
+        .gold-panel {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 6px 12px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .life-panel {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        
+
+        .heart.lost {
+            opacity: 0.3;
+            transform: scale(0.8);
+            filter: grayscale(1);
+        }
+
+        .wave-panel {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #4ecdc4;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 6px 12px;
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .battle-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            margin: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .left-spawn {
+            width: 8%;
+            background: linear-gradient(180deg, #2d3a25 0%, #1a2515 100%);
+            border-right: 3px solid #e74c3c;
+            position: relative;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .spawn-warning {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%) rotate(-90deg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.8;
+        }
+
+        .warning-icon {
+            font-size: 18px;
+            animation: warningPulse 1.5s ease-in-out infinite;
+        }
+
+        .warning-text {
+            font-size: 10px;
+            color: #ff6b6b;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 107, 107, 0.8);
+            letter-spacing: 1px;
+        }
+
+        .spawn-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #ff6b6b 0%, #e74c3c 50%, transparent 100%);
+            border-radius: 50%;
+            animation: floatParticle 3s ease-in-out infinite;
+        }
+
+        .particle-1 { left: 30%; top: 20%; animation-delay: 0s; }
+        .particle-2 { left: 60%; top: 40%; animation-delay: 0.6s; }
+        .particle-3 { left: 40%; top: 60%; animation-delay: 1.2s; }
+        .particle-4 { left: 70%; top: 75%; animation-delay: 1.8s; }
+        .particle-5 { left: 25%; top: 85%; animation-delay: 2.4s; }
+
+        .danger-stripes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                #c0392b,
+                #c0392b 4px,
+                #2d3a25 4px,
+                #2d3a25 8px
+            );
+            opacity: 0.6;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes floatParticle {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-10px) scale(1.3); opacity: 0.8; }
+        }
+
+        .spawn-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(231, 76, 60, 0.3) 20%, 
+                #e74c3c 50%, 
+                rgba(231, 76, 60, 0.3) 80%, 
+                transparent 100%);
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+            animation: pulseLine 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseLine {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes heartBreak {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.3); }
+            100% { transform: scale(0.8); }
+        }
+
+        .center-battle {
+            flex: 1;
+            background: linear-gradient(180deg, 
+                #2d5a27 0%, 
+                #1e4a17 50%, 
+                #153a10 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .center-battle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(78, 205, 196, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .monster {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+            z-index: 10;
+        }
+
+        .monster-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .monster:hover {
+            transform: scale(1.1);
+        }
+
+        .monster.slowed {
+            filter: drop-shadow(0 0 8px rgba(100, 149, 237, 0.6));
+        }
+
+        .monster.boss {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8));
+            animation: bossPulse 1.5s infinite;
+            z-index: 100;
+        }
+
+        .monster.burning {
+            filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.8)) brightness(1.2);
+            animation: burningPulse 0.5s infinite;
+        }
+
+        .monster.boss::after {
+            content: attr(data-hp) '/' attr(data-max-hp);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes bossPulse {
+            0%, 100% { 
+                filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8));
+            }
+            50% { 
+                filter: drop-shadow(0 0 25px rgba(255, 0, 0, 1));
+            }
+        }
+
+        @keyframes burningPulse {
+            0%, 100% { 
+                filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.8)) brightness(1.2);
+            }
+            50% { 
+                filter: drop-shadow(0 0 20px rgba(255, 100, 0, 1)) brightness(1.4);
+            }
+        }
+
+        .tower-menu {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 9999;
+            min-width: 130px;
+            text-align: center;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+            animation: fadeInScale 0.2s ease-out;
+        }
+
+        .tower-menu button {
+            display: block;
+            width: 100%;
+            padding: 6px 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tower-menu .upgrade-btn {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+        }
+
+        .tower-menu .remove-btn {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+        }
+
+        .tower-menu button:hover {
+            opacity: 0.9;
+        }
+
+        .tower-level {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ffd700;
+            color: #000;
+            font-size: 10px;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tower-emoji-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 95%;
+            height: 95%;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+
+        .tower-info {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .tower-name {
+            font-size: 9px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .tower-cost {
+            font-size: 8px;
+            color: #ffd700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            white-space: nowrap;
+        }
+
+        .tower-cannon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tower-cannon.basic {
+            filter: hue-rotate(120deg) saturate(1.3) brightness(1.1);
+        }
+
+        .tower-cannon.water {
+            filter: hue-rotate(190deg) saturate(1.3) brightness(1.1);
+        }
+
+        .tower-cannon.light {
+            filter: hue-rotate(50deg) saturate(1.8) brightness(1.2);
+        }
+
+        .tower-cannon.wind {
+            filter: hue-rotate(200deg) saturate(1.2) brightness(1.1);
+        }
+
+        .tower-cannon.solar {
+            filter: hue-rotate(30deg) saturate(1.8) brightness(1.3);
+        }
+
+        .tower-cannon.purify {
+            filter: hue-rotate(280deg) saturate(1.3) brightness(1.1);
+        }
+
+        .tower-cannon.thunder {
+            filter: hue-rotate(250deg) saturate(1.8) brightness(1.1);
+        }
+
+        .tower-cannon.rainbow {
+            filter: hue-rotate(0deg);
+        }
+
+        .right-wall {
+            width: 18%;
+            background: linear-gradient(180deg, #2a3a20 0%, #1f2f15 50%, #182510 100%);
+            border-left: 3px solid #3d5a27;
+            border-radius: 0 8px 8px 0;
+            box-shadow: inset -2px 0 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .right-wall::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .right-wall::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+
+        .right-wall::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .right-wall::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 1px;
+            flex: 1;
+            min-height: 0;
+            background: #1f2f15;
+        }
+
+        .wall-cell {
+            background: linear-gradient(145deg, #4a5a3d 0%, #3a4a2d 100%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wall-cell::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .wall-cell:hover {
+            background: linear-gradient(145deg, #5a6a4d 0%, #4a5a3d 100%);
+        }
+
+        .wall-cell.placed {
+            background: linear-gradient(145deg, #2a4a20 0%, #1a3a10 100%);
+            box-shadow: inset 0 0 10px rgba(39, 174, 96, 0.3);
+        }
+
+        .wall-cell.placed::before {
+            display: none;
+        }
+
+        .wall-cell.placed:hover {
+            background: linear-gradient(145deg, #3a5a30 0%, #2a4a20 100%);
+        }
+
+        .bottom-towers {
+            position: absolute;
+            bottom: 8px;
+            left: calc(8% + 8px);
+            right: calc(18% + 8px);
+            height: 56px;
+            display: flex;
+            gap: 8px;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .tower-slot {
+            flex: 1;
+            background: linear-gradient(145deg, #8b6914 0%, #6b4904 100%);
+            border-radius: 8px;
+            border: 2px dashed #c0a030;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .tower-slot:hover {
+            background: linear-gradient(145deg, #9b7924 0%, #7b5914 100%);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .tower-slot.selected {
+            background: linear-gradient(145deg, #ffd700 0%, #ffb700 100%);
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .projectile {
+            position: absolute;
+            font-size: 18px;
+            pointer-events: none;
+            z-index: 5000;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
+            animation: projectileGlow 0.3s ease-in-out infinite alternate;
+        }
+
+        @keyframes projectileGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)); }
+            100% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1)); }
+        }
+
+        .water-laser {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(100, 180, 255, 0.7), rgba(150, 220, 255, 1), rgba(100, 180, 255, 0.7));
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 4999;
+            border-radius: 1px;
+            box-shadow: 0 0 4px rgba(100, 180, 255, 0.7), 0 0 8px rgba(100, 180, 255, 0.3);
+            animation: laserPulse 0.3s ease-in-out infinite;
+        }
+
+        .laser-hit {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5000;
+            transform: translate(-50%, -50%);
+        }
+
+        .laser-hit-core {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200, 230, 255, 1) 0%, rgba(100, 180, 255, 0.8) 40%, rgba(50, 150, 255, 0.4) 70%, transparent 100%);
+            animation: laserHitExpand 0.3s ease-out forwards;
+            box-shadow: 0 0 10px rgba(100, 180, 255, 0.9), 0 0 20px rgba(100, 180, 255, 0.5);
+        }
+
+        .laser-hit-spark {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(200, 230, 255, 1);
+            animation: laserHitSpark 0.3s ease-out forwards;
+        }
+
+        @keyframes laserHitExpand {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes laserHitSpark {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        }
+
+        @keyframes laserPulse {
+            0%, 100% { opacity: 0.85; box-shadow: 0 0 4px rgba(100, 180, 255, 0.7), 0 0 8px rgba(100, 180, 255, 0.3); }
+            50% { opacity: 1; box-shadow: 0 0 6px rgba(100, 180, 255, 1), 0 0 12px rgba(100, 180, 255, 0.5); }
+        }
+
+        .arc-projectile {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #fff700 0%, #ffaa00 50%, #ff6600 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5000;
+            box-shadow: 0 0 10px rgba(255, 200, 0, 0.9), 0 0 20px rgba(255, 150, 0, 0.6);
+            animation: projectileGlow 0.1s ease-in-out infinite;
+        }
+
+        .arc-explosion {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5001;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .explosion-core {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 150, 0.9) 20%, rgba(255, 200, 50, 0.8) 40%, rgba(255, 150, 0, 0.6) 60%, rgba(200, 100, 0, 0.4) 80%, transparent 100%);
+            animation: explodeCore 0.4s ease-out forwards;
+            box-shadow: 0 0 30px rgba(255, 200, 0, 0.9), 0 0 60px rgba(255, 150, 0, 0.6), 0 0 90px rgba(255, 100, 0, 0.3);
+        }
+
+        .explosion-shockwave {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 200, 100, 0.8);
+            animation: shockwave 0.5s ease-out forwards;
+        }
+
+        .explosion-spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 200, 1);
+            animation: sparkFly 0.3s ease-out forwards;
+        }
+
+        @keyframes explodeCore {
+            0% {
+                transform: scale(0.1);
+                opacity: 1;
+                box-shadow: 0 0 10px rgba(255, 255, 200, 1);
+            }
+            30% {
+                transform: scale(0.6);
+                opacity: 1;
+                box-shadow: 0 0 40px rgba(255, 200, 0, 0.9), 0 0 80px rgba(255, 150, 0, 0.6);
+            }
+            100% {
+                transform: scale(1.3);
+                opacity: 0;
+                box-shadow: 0 0 20px rgba(255, 100, 0, 0.3);
+            }
+        }
+
+        @keyframes shockwave {
+            0% {
+                transform: scale(0.3);
+                opacity: 1;
+                border-width: 4px;
+            }
+            50% {
+                opacity: 0.6;
+                border-width: 2px;
+            }
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
+        @keyframes sparkFly {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .pause-btn {
+            height: 30px;
+            padding: 0 12px;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .pause-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pause-overlay.show {
+            display: flex;
+        }
+
+        .pause-menu {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .pause-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .pause-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pause-menu-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pause-menu-btn.resume {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .pause-menu-btn.exit {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .pause-menu-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .victory-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .victory-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .victory-menu {
+            background: #1a1a2e;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            animation: bounceIn 0.6s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .victory-emoji {
+            font-size: 72px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .victory-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .victory-stars {
+            font-size: 36px;
+            margin-bottom: 20px;
+            animation: twinkle 1s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .victory-stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .victory-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .victory-stat .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .victory-stat .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .victory-btn-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .victory-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .victory-btn.restart {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .victory-btn.home {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .victory-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .explosion {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+            animation: explode 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes explode {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+                transform: scale(0.5);
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                width: 56px;
+                height: 56px;
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes fadeOutScale {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .status-bar {
+                height: calc(36px + env(safe-area-inset-top));
+                padding-left: calc(8px + env(safe-area-inset-left));
+                padding-right: calc(8px + env(safe-area-inset-right));
+                padding-top: env(safe-area-inset-top);
+            }
+
+            .status-bar .wave-panel,
+            .status-bar .life-panel {
+                font-size: 10px;
+            }
+
+            .status-bar .heart {
+                font-size: 12px;
+            }
+
+            .gold-panel {
+                font-size: 10px;
+                padding: 3px 6px;
+                gap: 4px;
+            }
+
+            .back-btn {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .pause-btn {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
+            .battle-container {
+                margin: 3px;
+                border-radius: 6px;
+            }
+
+            .left-spawn {
+                width: 10%;
+            }
+
+            .right-wall {
+                width: 22%;
+            }
+
+            .wall-grid {
+                gap: 1px;
+            }
+
+            .wall-cell {
+                font-size: 12px;
+            }
+
+            .bottom-towers {
+                height: 40px;
+                left: calc(10% + 3px);
+                right: calc(22%);
+                padding: 3px;
+                gap: 3px;
+            }
+
+            .tower-slot {
+                font-size: 16px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .status-bar {
+                height: calc(32px + env(safe-area-inset-top));
+                padding-left: calc(6px + env(safe-area-inset-left));
+                padding-right: calc(6px + env(safe-area-inset-right));
+                padding-top: env(safe-area-inset-top);
+            }
+
+            .status-bar .wave-panel,
+            .status-bar .life-panel {
+                font-size: 9px;
+            }
+
+            .status-bar .heart {
+                font-size: 10px;
+            }
+
+            .gold-panel {
+                font-size: 9px;
+            }
+
+            .back-btn {
+                font-size: 9px;
+                padding: 2px 5px;
+            }
+
+            .pause-btn {
+                font-size: 9px;
+                padding: 2px 6px;
+            }
+
+            .right-wall {
+                width: 25%;
+            }
+
+            .left-spawn {
+                width: 8%;
+            }
+
+            .wall-cell {
+                font-size: 10px;
+            }
+
+            .bottom-towers {
+                height: 36px;
+                left: calc(8% + 3px);
+                right: calc(25%);
+            }
+
+            .tower-slot {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="back-btn">◀ 返回</div>
+        <div class="gold-panel">💰 300</div>
+        <div class="life-panel">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+        </div>
+        <div class="wave-panel">🌊 第1波</div>
+        <button id="nextWaveBtn" onclick="debugNextWave()" style="display: none; padding: 5px 10px; font-size: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">🔄 下一波</button>
+        <button class="pause-btn" id="pauseBtn">⏸️ 暂停</button>
+    </div>
+
+    <div class="battle-container">
+        <div class="left-spawn">
+            <div class="spawn-line"></div>
+            <div class="spawn-warning">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-text">危险区</div>
+            </div>
+            <div class="spawn-particles">
+                <div class="particle particle-1"></div>
+                <div class="particle particle-2"></div>
+                <div class="particle particle-3"></div>
+                <div class="particle particle-4"></div>
+                <div class="particle particle-5"></div>
+            </div>
+            <div class="danger-stripes"></div>
+        </div>
+
+        <div class="center-battle">
+            <div class="bottom-towers" id="towerSlots">
+                <div class="tower-slot" data-slot="0"></div>
+                <div class="tower-slot" data-slot="1"></div>
+                <div class="tower-slot" data-slot="2"></div>
+                <div class="tower-slot" data-slot="3"></div>
+                <div class="tower-slot" data-slot="4"></div>
+                <div class="tower-slot" data-slot="5"></div>
+                <div class="tower-slot" data-slot="6"></div>
+            </div>
+        </div>
+
+        <div class="right-wall">
+            <div class="wall-grid" id="wallGrid">
+                <div class="wall-cell" data-wall="0"></div>
+                <div class="wall-cell" data-wall="1"></div>
+                <div class="wall-cell" data-wall="2"></div>
+                <div class="wall-cell" data-wall="3"></div>
+                <div class="wall-cell" data-wall="4"></div>
+                <div class="wall-cell" data-wall="5"></div>
+                <div class="wall-cell" data-wall="6"></div>
+                <div class="wall-cell" data-wall="7"></div>
+                <div class="wall-cell" data-wall="8"></div>
+                <div class="wall-cell" data-wall="9"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="install-hint" id="installHint">📱 点击「添加到主屏幕」获得更好体验</div>
+
+    <div class="pause-overlay" id="pauseOverlay">
+        <div class="pause-menu">
+            <div class="pause-title">⏸️ 游戏暂停</div>
+            <div class="pause-btn-group">
+                <button class="pause-menu-btn resume" id="resumeBtn">▶️ 继续游戏</button>
+                <button class="pause-menu-btn exit" id="exitBtn">🚪 退出关卡</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="victory-overlay" id="victoryOverlay">
+        <div class="victory-menu">
+            <div class="victory-emoji">🎉</div>
+            <div class="victory-title">恭喜你获得胜利!</div>
+            <div class="victory-stars">⭐⭐⭐</div>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="stat-label">通过波次</span>
+                    <span class="stat-value" id="victoryWaves">3</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="stat-label">剩余生命</span>
+                    <span class="stat-value" id="victoryLives">6</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="stat-label">获得金币</span>
+                    <span class="stat-value" id="victoryGold">300</span>
+                </div>
+            </div>
+            <div class="victory-btn-group">
+                <button class="victory-btn restart" onclick="restartGame()">🔄 再来一局</button>
+                <button class="victory-btn home" onclick="goHome()">🏠 返回主页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let towers = ['', '', '', '', '', '', ''];
+        let selectedSlot = null;
+        let monsters = [];
+        let monsterId = 0;
+        let lives = 6;
+        let score = 0;
+        let gold = parseInt(localStorage.getItem('currentGold')) || 300;
+        if (isNaN(gold) || gold < 0) {
+            gold = 300;
+        }
+        let projectiles = [];
+        let isPaused = false;
+        let activeRainbowTowers = new Set();
+        let activeBombTowers = new Set();
+        let towerAttackInterval = null;
+        let laserCheckInterval = null;
+        let burnEffectInterval = null;
+        
+        let currentWave = 1;
+        const totalWaves = 5;
+        let waveState = 'idle';
+        let spawnQueue = [];
+        let spawnTimer = null;
+        let savedSpawnTime = null;
+        let savedSpawnInterval = null;
+        let pauseTimestamp = null;
+        let waveCompleteTimer = null;
+        let bossSpawned = false;
+        let bossEscaped = false;
+        let bossKilled = false;
+        
+        const LEVEL_UNLOCK_CONFIG = {
+            monsters: {
+                1: 4,  // 第1关只能出现前4个怪兽
+                2: 5,  // 第2关解锁第5个怪兽
+                3: 6,  // 第3关解锁第6个怪兽
+                4: 7   // 第4关解锁第7个怪兽（暂时最多7个）
+            }
+        };
+        
+        const waveConfig = {
+            1: { count: 8, interval: 1500, monsterLevel: 1 },
+            2: { count: 12, interval: 1200, monsterLevel: 1 },
+            3: { count: 18, interval: 1000, monsterLevel: 2 },
+            4: { count: 25, interval: 800, monsterLevel: 2 },
+            5: { count: 30, interval: 600, monsterLevel: 3, hasBoss: true }
+        };
+
+        const monsterLevelConfig = {
+            1: { hpMultiplier: 1, rewardMultiplier: 1 },
+            2: { hpMultiplier: 1.5, rewardMultiplier: 1.5 },
+            3: { hpMultiplier: 2, rewardMultiplier: 2 }
+        };
+
+        const towerCosts = {
+            'basic': 50,
+            'water': 80,
+            'light': 120,
+            'rainbow': 180,
+            'wind': 150,
+            'solar': 200,
+            'purify': 250,
+            'thunder': 300
+        };
+
+        const towerNames = {
+            'basic': '基础塔',
+            'water': '净水塔',
+            'light': '光能塔',
+            'rainbow': '彩虹塔',
+            'wind': '风塔',
+            'solar': '太阳能塔',
+            'purify': '净化塔',
+            'thunder': '雷电塔'
+        };
+
+        const towerUpgradeCosts = {
+            'basic': { 2: 75, 3: 100 },
+            'water': { 2: 120, 3: 160 },
+            'light': { 2: 180, 3: 240 },
+            'rainbow': { 2: 270, 3: 360 },
+            'wind': { 2: 225, 3: 300 },
+            'solar': { 2: 300, 3: 400 },
+            'purify': { 2: 375, 3: 500 },
+            'thunder': { 2: 450, 3: 600 }
+        };
+
+        let selectedTowerCell = null;
+        window.towerLevels = {};
+
+        const emojis = {
+            'basic': '🌿',
+            'water': '💧',
+            'light': '☀️',
+            'rainbow': '🌈',
+            'wind': '🌀',
+            'solar': '🔆',
+            'purify': '🧪',
+            'thunder': '⚡'
+        };
+
+        function createTowerEmoji(towerType, showInfo = true) {
+            let towerSVG = '';
+            
+            // 基础塔 - 绿色植物风格
+            if (towerType === 'basic') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#3d5a3d"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#4a7a4a"/>
+  <circle cx="50" cy="60" r="20" fill="#5a8a5a"/>
+  <circle cx="50" cy="60" r="16" fill="#7ab87a"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#4a7a4a"/>
+    <circle cx="50" cy="60" r="6" fill="#5a8a5a"/>
+    <circle cx="95" cy="60" r="5" fill="#9cd99c"/>
+    <circle cx="98" cy="60" r="3" fill="#3d5a3d"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#9cd99c"/>
+  <!-- 叶子装饰 -->
+  <ellipse cx="35" cy="50" rx="6" ry="12" fill="#2d8a2d" transform="rotate(-30 35 50)"/>
+  <ellipse cx="65" cy="50" rx="6" ry="12" fill="#2d8a2d" transform="rotate(30 65 50)"/>
+</svg>`;
+            }
+            // 净水塔 - 蓝色水滴风格
+            else if (towerType === 'water') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#2a5a8a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#3a7ab8"/>
+  <circle cx="50" cy="60" r="20" fill="#4a9ae8"/>
+  <circle cx="50" cy="60" r="16" fill="#7ac8ff"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#3a7ab8"/>
+    <circle cx="50" cy="60" r="6" fill="#4a9ae8"/>
+    <circle cx="95" cy="60" r="5" fill="#a8e0ff"/>
+    <circle cx="98" cy="60" r="3" fill="#2a5a8a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#a8e0ff"/>
+  <!-- 水滴装饰 -->
+  <path d="M50 40 L48 35 L50 30 L52 35 Z" fill="#d8f0ff"/>
+  <circle cx="50" cy="32" r="2" fill="#ffffff"/>
+</svg>`;
+            }
+            // 光能塔 - 金色阳光风格
+            else if (towerType === 'light') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#8a6a2a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#aa8a3a"/>
+  <circle cx="50" cy="60" r="20" fill="#cca84a"/>
+  <circle cx="50" cy="60" r="16" fill="#ffd85a"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#aa8a3a"/>
+    <circle cx="50" cy="60" r="6" fill="#cca84a"/>
+    <circle cx="95" cy="60" r="5" fill="#ffe88a"/>
+    <circle cx="98" cy="60" r="3" fill="#8a6a2a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#ffe88a"/>
+  <!-- 光芒装饰 -->
+  <line x1="50" y1="35" x2="50" y2="28" stroke="#ffd85a" stroke-width="3"/>
+  <line x1="50" y1="85" x2="50" y2="92" stroke="#ffd85a" stroke-width="3"/>
+  <line x1="35" y1="50" x2="28" y2="50" stroke="#ffd85a" stroke-width="3"/>
+  <line x1="65" y1="50" x2="72" y2="50" stroke="#ffd85a" stroke-width="3"/>
+</svg>`;
+            }
+            // 彩虹塔 - 彩虹渐变风格
+            else if (towerType === 'rainbow') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="url(#rBaseGrad)"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="url(#rBaseGrad)"/>
+  <circle cx="50" cy="60" r="20" fill="url(#rBodyGrad)"/>
+  <circle cx="50" cy="60" r="16" fill="url(#rAccentGrad)"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="url(#rCannonGrad)"/>
+    <circle cx="95" cy="60" r="5" fill="#ff6b6b"/>
+    <circle cx="98" cy="60" r="3" fill="#ffd93d"/>
+    <circle cx="97" cy="60" r="2" fill="url(#rTowerGrad)"/>
+    <polygon points="97,52 99,58 95,58" fill="#ff6b6b"/>
+    <polygon points="105,60 99,62 99,58" fill="#ffd93d"/>
+    <polygon points="97,68 95,62 99,62" fill="#6bcb77"/>
+    <polygon points="89,60 95,58 95,62" fill="#4d96ff"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="url(#rCenterGrad)"/>
+  <defs>
+    <linearGradient id="rBaseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b"/><stop offset="25%" style="stop-color:#ffd93d"/><stop offset="50%" style="stop-color:#6bcb77"/><stop offset="75%" style="stop-color:#4d96ff"/><stop offset="100%" style="stop-color:#a55eea"/>
+    </linearGradient>
+    <linearGradient id="rBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b6b"/><stop offset="25%" style="stop-color:#ffd93d"/><stop offset="50%" style="stop-color:#6bcb77"/><stop offset="75%" style="stop-color:#4d96ff"/><stop offset="100%" style="stop-color:#a55eea"/>
+    </linearGradient>
+    <linearGradient id="rAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff8a8a"/><stop offset="25%" style="stop-color:#ffe96d"/><stop offset="50%" style="stop-color:#8bea98"/><stop offset="75%" style="stop-color:#6da6ff"/><stop offset="100%" style="stop-color:#c57eea"/>
+    </linearGradient>
+    <linearGradient id="rCannonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a55eea"/><stop offset="25%" style="stop-color:#4d96ff"/><stop offset="50%" style="stop-color:#6bcb77"/><stop offset="75%" style="stop-color:#ffd93d"/><stop offset="100%" style="stop-color:#ff6b6b"/>
+    </linearGradient>
+    <linearGradient id="rCenterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd93d"/><stop offset="50%" style="stop-color:#6bcb77"/><stop offset="100%" style="stop-color:#4d96ff"/>
+    </linearGradient>
+    <linearGradient id="rTowerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b"/><stop offset="50%" style="stop-color:#6bcb77"/><stop offset="100%" style="stop-color:#4d96ff"/>
+    </linearGradient>
+  </defs>
+</svg>`;
+            }
+            // 风塔 - 青色旋风风格
+            else if (towerType === 'wind') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#3a7a8a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#4a9aae"/>
+  <circle cx="50" cy="60" r="20" fill="#5ab8cc"/>
+  <circle cx="50" cy="60" r="16" fill="#8ae0f0"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#4a9aae"/>
+    <circle cx="50" cy="60" r="6" fill="#5ab8cc"/>
+    <circle cx="95" cy="60" r="5" fill="#b8f0f8"/>
+    <circle cx="98" cy="60" r="3" fill="#3a7a8a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#b8f0f8"/>
+  <!-- 旋风装饰 -->
+  <path d="M40 52 Q50 45 50 52 Q50 59 40 52" fill="none" stroke="#3a7a8a" stroke-width="2"/>
+  <path d="M60 52 Q50 45 50 52 Q50 59 60 52" fill="none" stroke="#3a7a8a" stroke-width="2"/>
+</svg>`;
+            }
+            // 太阳能塔 - 黄色太阳光风格
+            else if (towerType === 'solar') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#9a7a2a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#ba9a3a"/>
+  <circle cx="50" cy="60" r="20" fill="#dabc4a"/>
+  <circle cx="50" cy="60" r="16" fill="#fff06a"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#ba9a3a"/>
+    <circle cx="50" cy="60" r="6" fill="#dabc4a"/>
+    <circle cx="95" cy="60" r="5" fill="#fff89a"/>
+    <circle cx="98" cy="60" r="3" fill="#9a7a2a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#fff89a"/>
+  <!-- 太阳光芒装饰 -->
+  <polygon points="50,25 52,32 50,30 48,32" fill="#ffd03a"/>
+  <polygon points="50,95 52,88 50,90 48,88" fill="#ffd03a"/>
+  <polygon points="25,50 32,52 30,50 32,48" fill="#ffd03a"/>
+  <polygon points="95,50 88,52 90,50 88,48" fill="#ffd03a"/>
+</svg>`;
+            }
+            // 净化塔 - 紫色药剂风格
+            else if (towerType === 'purify') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#5a3a7a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#7a5a9a"/>
+  <circle cx="50" cy="60" r="20" fill="#9a7aba"/>
+  <circle cx="50" cy="60" r="16" fill="#c9a8e8"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#7a5a9a"/>
+    <circle cx="50" cy="60" r="6" fill="#9a7aba"/>
+    <circle cx="95" cy="60" r="5" fill="#e8c8f8"/>
+    <circle cx="98" cy="60" r="3" fill="#5a3a7a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#e8c8f8"/>
+  <!-- 药剂瓶装饰 -->
+  <rect x="46" y="42" width="8" height="12" fill="#c9a8e8" rx="2"/>
+  <rect x="47" y="40" width="6" height="4" fill="#5a3a7a"/>
+</svg>`;
+            }
+            // 雷电塔 - 深蓝色闪电风格
+            else if (towerType === 'thunder') {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#2a2a4a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#3a3a6a"/>
+  <circle cx="50" cy="60" r="20" fill="#4a4a8a"/>
+  <circle cx="50" cy="60" r="16" fill="#6a6aba"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#3a3a6a"/>
+    <circle cx="50" cy="60" r="6" fill="#4a4a8a"/>
+    <circle cx="95" cy="60" r="5" fill="#8a8adc"/>
+    <circle cx="98" cy="60" r="3" fill="#2a2a4a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#8a8adc"/>
+  <!-- 闪电装饰 -->
+  <polygon points="48 45 46 52 52 52 50 58 54 50 48 50" fill="#ffd03a"/>
+</svg>`;
+            }
+            // 默认风格
+            else {
+                towerSVG = `
+<svg width="100%" height="100%" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="35" ry="8" fill="#5a5a5a"/>
+  <ellipse cx="50" cy="82" rx="30" ry="7" fill="#6a6a6a"/>
+  <circle cx="50" cy="60" r="20" fill="#7a7a7a"/>
+  <circle cx="50" cy="60" r="16" fill="#9a9a9a"/>
+  <g class="tower-cannon-group" transform-origin="50 60" style="transform: rotate(180deg);">
+    <rect x="52" y="54" width="45" height="12" rx="2" fill="#5a5a5a"/>
+    <circle cx="50" cy="60" r="6" fill="#7a7a7a"/>
+    <circle cx="95" cy="60" r="5" fill="#9a9a9a"/>
+    <circle cx="98" cy="60" r="3" fill="#5a5a5a"/>
+  </g>
+  <circle cx="50" cy="60" r="6" fill="#9a9a9a"/>
+</svg>`;
+            }
+            
+            const towerInfoHtml = showInfo ? `
+                    <div class="tower-info">
+                        <div class="tower-name">${towerNames[towerType] || towerType}</div>
+                        <div class="tower-cost">💰 ${towerCosts[towerType] || 0}</div>
+                    </div>
+                ` : '';
+                
+            return `
+                <span class="tower-emoji-container" style="width: 100%; height: 100%;">
+                    <span class="tower-cannon ${towerType}">${towerSVG}</span>
+                    ${towerInfoHtml}
+                </span>
+            `;
+        }
+
+        const towerInfo = {
+            '🌿': { damage: 15, interval: 800, type: 'ray', name: 'basic' },
+            '💧': { damage: 8, interval: 300, type: 'laser', name: 'water' },
+            '☀️': { damage: 60, interval: 1500, type: 'arc', name: 'light' },
+            '🌈': { damage: 45, interval: 1000, type: 'rainbow', name: 'rainbow' },
+            '🌀': { damage: 20, interval: 600, type: 'pierce', name: 'wind' },
+            '🔆': { damage: 50, interval: 1200, type: 'bomb', name: 'solar' },
+            '🧪': { damage: 30, interval: 900, type: 'splash', name: 'purify' },
+            '⚡': { damage: 70, interval: 1400, type: 'lightning', name: 'thunder' }
+        };
+
+        const monsterInfo = {
+            '🗑️': { hp: 60, speed: 'fast', reward: 10, name: '垃圾怪', type: 'ground' },
+            '💨': { hp: 90, speed: 'medium', reward: 15, name: '废气怪', type: 'flying' },
+            '💀': { hp: 150, speed: 'slow', reward: 25, name: '污染王', type: 'ground' },
+            '🦠': { hp: 220, speed: 'medium', reward: 35, name: '病毒怪', type: 'flying' },
+            '🧴': { hp: 120, speed: 'fast', reward: 20, name: '塑料怪', type: 'ground' },
+            '🔋': { hp: 160, speed: 'medium', reward: 22, name: '电池怪', type: 'ground' },
+            '🛢️': { hp: 200, speed: 'slow', reward: 30, name: '油污怪', type: 'ground' },
+            '☢️': { hp: 280, speed: 'slow', reward: 45, name: '辐射怪', type: 'flying' },
+            '👹': { hp: 2000, speed: 'very-slow', reward: 500, name: '环境破坏王', isBoss: true, type: 'boss' }
+        };
+
+        function loadTowers() {
+            const savedTowers = localStorage.getItem('battleTowers');
+            console.log('loadTowers:', 'savedTowers:', savedTowers);
+            if (savedTowers) {
+                towers = JSON.parse(savedTowers);
+                console.log('加载的塔数组:', towers);
+            }
+            const towerSlots = document.querySelectorAll('.tower-slot');
+            towerSlots.forEach((slot, index) => {
+                const towerType = towers[index] || '';
+                console.log('插槽', index, '塔类型:', towerType, 'emojis中存在:', !!emojis[towerType]);
+                if (towerType && emojis[towerType]) {
+                    slot.innerHTML = createTowerEmoji(towerType);
+                    slot.dataset.towerType = towerType;
+                    console.log('设置插槽', index, 'data-towerType:', slot.dataset.towerType);
+                } else {
+                    slot.innerHTML = '';
+                    slot.removeAttribute('data-towerType');
+                }
+                slot.classList.remove('selected');
+            });
+            
+            // 重新渲染墙上已放置的塔，使用新的炮塔样式
+            const wallCells = document.querySelectorAll('.wall-cell.placed');
+            wallCells.forEach(cell => {
+                const towerType = cell.dataset.towerType;
+                if (towerType) {
+                    const towerId = cell.dataset.id;
+                    const level = window.towerLevels[towerId] || 1;
+                    cell.innerHTML = createTowerEmoji(towerType, false);
+                    updateTowerLevelDisplay(cell, level);
+                }
+            });
+            
+            selectedSlot = null;
+            startTowerAttacks();
+        }
+
+        function isMobileDevice() {
+            return (typeof window.orientation !== 'undefined') || 
+                   (navigator.userAgent.indexOf('IEMobile') !== -1) ||
+                   (navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1) ||
+                   (navigator.userAgent.indexOf('iPhone') !== -1) ||
+                   (navigator.userAgent.indexOf('iPad') !== -1);
+        }
+
+        function autoEnterFullscreen() {
+            if (isMobileDevice() && localStorage.getItem('fullscreenEnabled')) {
+                setTimeout(() => {
+                    const docEl = document.documentElement;
+                    const requestMethod = docEl.requestFullscreen || 
+                                         docEl.webkitRequestFullscreen || 
+                                         docEl.mozRequestFullScreen || 
+                                         docEl.msRequestFullscreen;
+                    
+                    if (requestMethod) {
+                        requestMethod.call(docEl);
+                    }
+                }, 500);
+            }
+        }
+
+        autoEnterFullscreen();
+
+        function hideAddressBar() {
+            if (typeof window.orientation !== 'undefined') {
+                setTimeout(() => {
+                    window.scrollTo(0, 1);
+                }, 100);
+            }
+        }
+
+        function requestFullscreen() {
+            const docEl = document.documentElement;
+            const requestMethod = docEl.requestFullscreen || 
+                                 docEl.webkitRequestFullscreen || 
+                                 docEl.mozRequestFullScreen || 
+                                 docEl.msRequestFullscreen;
+            
+            if (requestMethod) {
+                requestMethod.call(docEl);
+            }
+        }
+
+        function handleViewportChange() {
+            const viewport = window.visualViewport;
+            if (viewport) {
+                document.body.style.height = `${viewport.height}px`;
+                document.body.style.width = `${viewport.width}px`;
+            }
+        }
+
+        function initMobileFullscreen() {
+            hideAddressBar();
+            
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleViewportChange);
+                window.visualViewport.addEventListener('scroll', hideAddressBar);
+            }
+            
+            window.addEventListener('resize', hideAddressBar);
+            window.addEventListener('scroll', hideAddressBar);
+            
+            document.addEventListener('touchstart', function(e) {
+                hideAddressBar();
+            }, { passive: true });
+            
+            setTimeout(() => {
+                if (window.innerHeight < window.screen.height || 
+                    window.innerWidth < window.screen.width) {
+                    hideAddressBar();
+                }
+            }, 500);
+        }
+
+        initMobileFullscreen();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const installHint = document.getElementById('installHint');
+            
+            if (installHint) {
+                setTimeout(() => {
+                    installHint.classList.add('show');
+                }, 2000);
+                
+                setTimeout(() => {
+                    installHint.classList.remove('show');
+                }, 8000);
+            }
+        });
+
+        function createMonsterSVG(type, info) {
+            const monsterType = info.type || 'ground';
+            
+            if (type === '🗑️') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="14" y="18" width="32" height="28" fill="#707070"/>
+  <rect x="12" y="14" width="36" height="6" fill="#505050"/>
+  <rect x="10" y="10" width="40" height="6" fill="#606060"/>
+  <rect x="20" y="22" width="4" height="10" fill="#404040"/>
+  <rect x="28" y="22" width="4" height="10" fill="#404040"/>
+  <rect x="36" y="22" width="4" height="10" fill="#404040"/>
+  <rect x="22" y="26" width="4" height="4" fill="#ffcc00"/>
+  <rect x="34" y="24" width="4" height="4" fill="#ff6600"/>
+  <rect x="20" y="34" width="6" height="6" fill="white"/>
+  <rect x="22" y="36" width="2" height="2" fill="#333"/>
+  <rect x="34" y="34" width="6" height="6" fill="white"/>
+  <rect x="36" y="36" width="2" height="2" fill="#333"/>
+  <rect x="24" y="44" width="4" height="2" fill="#404040"/>
+  <rect x="28" y="46" width="4" height="2" fill="#404040"/>
+  <rect x="32" y="44" width="4" height="2" fill="#404040"/>
+  <rect x="18" y="50" width="6" height="8" fill="#505050">
+    <animate attributeName="height" values="8;6;8" dur="0.3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="36" y="50" width="6" height="8" fill="#505050">
+    <animate attributeName="height" values="6;8;6" dur="0.3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="6" y="36" width="8" height="6" fill="#505050">
+    <animate attributeName="width" values="8;6;8" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="46" y="38" width="8" height="6" fill="#505050">
+    <animate attributeName="width" values="6;8;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else if (type === '💨') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="4" y="22" width="8" height="16" fill="#d0d0d0"/>
+  <rect x="6" y="18" width="6" height="4" fill="#d0d0d0"/>
+  <rect x="6" y="38" width="6" height="4" fill="#d0d0d0"/>
+  <rect x="48" y="24" width="8" height="14" fill="#d0d0d0"/>
+  <rect x="48" y="20" width="6" height="4" fill="#d0d0d0"/>
+  <rect x="48" y="40" width="6" height="4" fill="#d0d0d0"/>
+  <rect x="18" y="20" width="24" height="22" fill="#a0a0a0"/>
+  <rect x="22" y="24" width="16" height="14" fill="#c0c0c0"/>
+  <rect x="22" y="26" width="6" height="6" fill="white"/>
+  <rect x="24" y="28" width="2" height="2" fill="#555"/>
+  <rect x="32" y="26" width="6" height="6" fill="white"/>
+  <rect x="34" y="28" width="2" height="2" fill="#555"/>
+  <rect x="26" y="38" width="8" height="4" fill="#808080"/>
+  <rect x="16" y="16" width="4" height="4" fill="#c0c0c0">
+    <animate attributeName="height" values="4;6;4" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="40" y="14" width="4" height="4" fill="#c0c0c0">
+    <animate attributeName="height" values="6;4;6" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else if (type === '💀') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="16" y="14" width="28" height="30" fill="#4a4a4a"/>
+  <rect x="18" y="16" width="24" height="26" fill="#6a6a6a"/>
+  <rect x="20" y="20" width="8" height="10" fill="#333"/>
+  <rect x="32" y="20" width="8" height="10" fill="#333"/>
+  <rect x="24" y="22" width="4" height="6" fill="#ff4444">
+    <animate attributeName="height" values="6;8;6" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="32" y="22" width="4" height="6" fill="#ff4444">
+    <animate attributeName="height" values="8;6;8" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="28" y="32" width="4" height="6" fill="#333"/>
+  <rect x="24" y="42" width="4" height="8" fill="#3a3a3a">
+    <animate attributeName="height" values="8;6;8" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="32" y="42" width="4" height="8" fill="#3a3a3a">
+    <animate attributeName="height" values="6;8;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="8" y="26" width="10" height="6" fill="#3a3a3a">
+    <animate attributeName="width" values="10;8;10" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="42" y="26" width="10" height="6" fill="#3a3a3a">
+    <animate attributeName="width" values="8;10;8" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else if (type === '🦠') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="6" y="18" width="8" height="6" fill="#30a858">
+    <animate attributeName="height" values="6;4;6" dur="0.3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="46" y="22" width="8" height="6" fill="#30a858">
+    <animate attributeName="height" values="4;6;4" dur="0.3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="8" y="42" width="8" height="6" fill="#30a858">
+    <animate attributeName="height" values="6;4;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="44" y="38" width="8" height="6" fill="#30a858">
+    <animate attributeName="height" values="4;6;4" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="18" y="18" width="24" height="26" fill="#50c878"/>
+  <rect x="22" y="22" width="16" height="18" fill="#80e898"/>
+  <rect x="22" y="24" width="6" height="6" fill="white"/>
+  <rect x="24" y="26" width="2" height="2" fill="#106040"/>
+  <rect x="32" y="24" width="6" height="6" fill="white"/>
+  <rect x="34" y="26" width="2" height="2" fill="#106040"/>
+  <rect x="26" y="36" width="8" height="4" fill="#30a858"/>
+  <rect x="20" y="20" width="4" height="4" fill="#80e898">
+    <animate attributeName="width" values="4;6;4" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="36" y="18" width="4" height="4" fill="#80e898">
+    <animate attributeName="width" values="6;4;6" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else if (type === '🧴') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="18" y="26" width="24" height="24" fill="#ffe4e1"/>
+  <rect x="20" y="28" width="20" height="20" fill="#fff0f0"/>
+  <rect x="24" y="16" width="12" height="14" fill="#e8d4d1"/>
+  <rect x="26" y="14" width="8" height="6" fill="#d4c4c1"/>
+  <rect x="22" y="32" width="6" height="6" fill="white"/>
+  <rect x="24" y="34" width="2" height="2" fill="#ff6b6b"/>
+  <rect x="32" y="32" width="6" height="6" fill="white"/>
+  <rect x="34" y="34" width="2" height="2" fill="#ff6b6b"/>
+  <rect x="26" y="44" width="8" height="4" fill="#e8d4d1"/>
+  <rect x="20" y="52" width="6" height="6" fill="#e8d4d1">
+    <animate attributeName="height" values="6;4;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="34" y="52" width="6" height="6" fill="#e8d4d1">
+    <animate attributeName="height" values="4;6;4" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="10" y="36" width="10" height="6" fill="#e8d4d1">
+    <animate attributeName="width" values="10;8;10" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="40" y="38" width="10" height="6" fill="#e8d4d1">
+    <animate attributeName="width" values="8;10;8" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else if (type === '🔋') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="14" y="16" width="32" height="32" fill="#4a90d9"/>
+  <rect x="16" y="18" width="28" height="28" fill="#7ab0f9"/>
+  <rect x="26" y="10" width="8" height="8" fill="#3a70b9"/>
+  <rect x="20" y="24" width="20" height="4" fill="#ffd700"/>
+  <rect x="20" y="32" width="20" height="4" fill="#ffd700"/>
+  <rect x="20" y="28" width="6" height="6" fill="white"/>
+  <rect x="22" y="30" width="2" height="2" fill="#ffd700"/>
+  <rect x="34" y="28" width="6" height="6" fill="white"/>
+  <rect x="36" y="30" width="2" height="2" fill="#ffd700"/>
+  <rect x="20" y="50" width="6" height="8" fill="#3a70b9">
+    <animate attributeName="height" values="8;6;8" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="34" y="50" width="6" height="8" fill="#3a70b9">
+    <animate attributeName="height" values="6;8;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="6" y="28" width="8" height="6" fill="#3a70b9">
+    <animate attributeName="width" values="8;6;8" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="46" y="30" width="8" height="6" fill="#3a70b9">
+    <animate attributeName="width" values="6;8;6" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="28" y="42" width="4" height="4" fill="#3a70b9"/>
+</svg>`;
+            } else if (type === '🛢️') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="16" y="26" width="28" height="24" fill="#2c2c2c"/>
+  <rect x="18" y="28" width="24" height="20" fill="#4c4c4c"/>
+  <rect x="18" y="22" width="24" height="8" fill="#2c2c2c"/>
+  <rect x="20" y="20" width="20" height="4" fill="#4c4c4c"/>
+  <rect x="20" y="32" width="8" height="8" fill="white"/>
+  <rect x="22" y="34" width="4" height="4" fill="#ff8c00"/>
+  <rect x="32" y="32" width="8" height="8" fill="white"/>
+  <rect x="34" y="34" width="4" height="4" fill="#ff8c00"/>
+  <rect x="20" y="52" width="8" height="6" fill="#1c1c1c">
+    <animate attributeName="height" values="6;4;6" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="32" y="52" width="8" height="6" fill="#1c1c1c">
+    <animate attributeName="height" values="4;6;4" dur="0.35s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="6" y="34" width="10" height="8" fill="#1c1c1c">
+    <animate attributeName="width" values="10;8;10" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="44" y="36" width="10" height="8" fill="#1c1c1c">
+    <animate attributeName="width" values="8;10;8" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="26" y="46" width="8" height="4" fill="#1c1c1c"/>
+</svg>`;
+            } else if (type === '☢️') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="6" y="16" width="12" height="12" fill="#7b1fa2">
+    <animate attributeName="height" values="12;10;12" dur="0.28s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="42" y="18" width="12" height="12" fill="#7b1fa2">
+    <animate attributeName="height" values="10;12;10" dur="0.28s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="18" y="20" width="24" height="26" fill="#9932cc"/>
+  <rect x="22" y="24" width="16" height="18" fill="#ba55d3"/>
+  <rect x="22" y="26" width="6" height="6" fill="white"/>
+  <rect x="24" y="28" width="2" height="2" fill="#00ff00"/>
+  <rect x="32" y="26" width="6" height="6" fill="white"/>
+  <rect x="34" y="28" width="2" height="2" fill="#00ff00"/>
+  <rect x="20" y="14" width="4" height="4" fill="#00ff00">
+    <animate attributeName="width" values="4;6;4" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="36" y="12" width="4" height="4" fill="#00ff00">
+    <animate attributeName="width" values="6;4;6" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="28" y="8" width="4" height="4" fill="#00ff00">
+    <animate attributeName="width" values="4;6;4" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="26" y="38" width="8" height="4" fill="#7b1fa2"/>
+</svg>`;
+            } else if (type === '👹') {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 70 70" class="monster-svg">
+  <rect x="16" y="24" width="38" height="34" fill="#8b0000"/>
+  <rect x="18" y="26" width="34" height="30" fill="#cd0000"/>
+  <rect x="20" y="16" width="8" height="12" fill="#5b0000"/>
+  <rect x="42" y="16" width="8" height="12" fill="#5b0000"/>
+  <rect x="30" y="12" width="10" height="16" fill="#5b0000"/>
+  <rect x="22" y="30" width="10" height="10" fill="white"/>
+  <rect x="26" y="34" width="4" height="4" fill="#ffff00">
+    <animate attributeName="width" values="4;6;4" dur="0.6s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="38" y="30" width="10" height="10" fill="white"/>
+  <rect x="40" y="34" width="4" height="4" fill="#ffff00">
+    <animate attributeName="width" values="6;4;6" dur="0.6s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="24" y="46" width="22" height="6" fill="#5b0000"/>
+  <rect x="28" y="46" width="4" height="6" fill="#5b0000"/>
+  <rect x="38" y="46" width="4" height="6" fill="#5b0000"/>
+  <rect x="14" y="56" width="10" height="10" fill="#5b0000">
+    <animate attributeName="height" values="10;8;10" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="46" y="56" width="10" height="10" fill="#5b0000">
+    <animate attributeName="height" values="8;10;8" dur="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="4" y="34" width="12" height="10" fill="#5b0000">
+    <animate attributeName="width" values="12;10;12" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="54" y="36" width="12" height="10" fill="#5b0000">
+    <animate attributeName="width" values="10;12;10" dur="0.5s" repeatCount="indefinite"/>
+  </rect>
+</svg>`;
+            } else {
+                return `
+<svg width="100%" height="100%" viewBox="0 0 60 60" class="monster-svg">
+  <rect x="18" y="20" width="24" height="24" fill="#8b7355"/>
+  <rect x="22" y="24" width="6" height="6" fill="white"/>
+  <rect x="24" y="26" width="2" height="2" fill="#333"/>
+  <rect x="32" y="24" width="6" height="6" fill="white"/>
+  <rect x="34" y="26" width="2" height="2" fill="#333"/>
+  <rect x="26" y="36" width="8" height="4" fill="#6b5344"/>
+</svg>`;
+            }
+        }
+
+        function createMonsterElement(type, info, level = 1) {
+            const monster = document.createElement('div');
+            monster.className = 'monster';
+            const monsterType = info.type || 'ground';
+            monster.innerHTML = createMonsterSVG(type, info);
+            monster.style.left = '8%';
+            const randomTop = Math.floor(Math.random() * 60) + 15;
+            monster.style.top = randomTop + '%';
+            monster.dataset.id = monsterId++;
+            monster.dataset.type = type;
+            monster.dataset.level = level;
+            monster.dataset.hp = info.hp;
+            monster.dataset.maxHp = info.hp;
+            monster.dataset.reward = info.reward;
+            monster.dataset.slowed = '0';
+            monster.dataset.slowEnd = '0';
+            monster.dataset.x = '8';
+            monster.dataset.y = randomTop.toString();
+            
+            if (level > 1) {
+                const levelBadge = document.createElement('div');
+                levelBadge.className = 'monster-level';
+                levelBadge.textContent = level;
+                levelBadge.style.cssText = `
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    background: ${level === 2 ? '#ffa500' : '#ff4444'};
+                    color: white;
+                    font-size: 10px;
+                    font-weight: bold;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                monster.appendChild(levelBadge);
+            }
+            
+            return monster;
+        }
+
+        let waveCheckInterval = null; // 波次检查定时器
+        
+        function startWave() {
+            console.log('=====================================');
+            console.log('startWave 被调用:', '当前波次:', currentWave, '总波次:', totalWaves);
+            console.log('=====================================');
+            
+            if (currentWave > totalWaves) {
+                showVictory();
+                return;
+            }
+            
+            // 清除之前的检查定时器
+            if (waveCheckInterval) {
+                clearInterval(waveCheckInterval);
+                waveCheckInterval = null;
+            }
+            
+            // 重置波次状态
+            bossSpawned = false;
+            bossEscaped = false;
+            bossKilled = false;
+            
+            const config = waveConfig[currentWave];
+            waveState = 'spawning';
+            updateWaveDisplay();
+            
+            console.log('开始波次:', currentWave, '怪物数量:', config.count, '间隔:', config.interval, '有Boss:', config.hasBoss || false);
+            
+            // 创建怪物生成队列
+            spawnQueue = [];
+            for (let i = 0; i < config.count; i++) {
+                spawnQueue.push({
+                    type: 'normal',
+                    monsterLevel: config.monsterLevel
+                });
+            }
+            
+            // 如果有Boss，添加到队列末尾
+            if (config.hasBoss) {
+                spawnQueue.push({
+                    type: 'boss',
+                    monsterLevel: 3
+                });
+            }
+            
+            // 开始生成怪物
+            spawnNextMonster(config.interval);
+            
+            // 【关键】添加独立的波次完成检查定时器 - 完全不依赖原有逻辑！
+            const currentWaveNum = currentWave; // 保存当前波次编号
+            console.log('🔧 启动独立波次监控定时器，监控波次:', currentWaveNum);
+            
+            waveCheckInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                // 检查是否是当前波次（防止波次切换后旧定时器还在运行）
+                if (currentWaveNum !== currentWave) {
+                    console.log('🔧 停止旧波次的监控定时器');
+                    clearInterval(waveCheckInterval);
+                    waveCheckInterval = null;
+                    return;
+                }
+                
+                // 检查条件
+                const configCheck = waveConfig[currentWave];
+                const hasBoss = configCheck && configCheck.hasBoss;
+                
+                // 条件1：场上没有怪物
+                // 条件2：所有怪物已经生成完毕（spawnQueue为空）
+                if (spawnQueue.length === 0 && monsters.length === 0) {
+                    console.log('⚡ 独立监控检测到波次完成！波次:', currentWaveNum);
+                    
+                    // 对于有Boss的波次，额外检查Boss是否被击杀
+                    if (hasBoss) {
+                        if (!bossSpawned || !bossKilled) {
+                            console.log('🔧 Boss相关条件未满足，继续等待...');
+                            return;
+                        }
+                    }
+                    
+                    // 清除定时器
+                    clearInterval(waveCheckInterval);
+                    waveCheckInterval = null;
+                    
+                    // 进入下一波
+                    console.log('🚀 独立监控触发下一波！');
+                    currentWave++;
+                    if (currentWave > totalWaves) {
+                        showVictory();
+                    } else {
+                        startWave();
+                    }
+                }
+            }, 300); // 每300毫秒检查一次
+        }
+
+        function spawnNextMonster(interval) {
+            console.log('spawnNextMonster:', '状态:', waveState, '队列长度:', spawnQueue.length, '场上怪物:', monsters.length);
+            
+            // 如果已暂停，不继续生成
+            if (isPaused) {
+                console.log('游戏已暂停，暂停生成怪物');
+                return;
+            }
+            
+            if (waveState !== 'spawning') {
+                console.log('当前状态不是spawning，跳过');
+                return;
+            }
+            
+            if (spawnQueue.length === 0) {
+                console.log('怪物生成队列已空，等待所有怪物处理完毕');
+                // 不再启动waveCompleteCheck，完全依赖waveCheckInterval独立监控
+                return;
+            }
+            
+            const item = spawnQueue.shift();
+            
+            // 【终极防护】再次检查暂停状态，防止定时器在暂停期间触发
+            if (isPaused) {
+                console.log('游戏已暂停，把怪物放回队列！');
+                spawnQueue.unshift(item); // 把怪物放回队列开头
+                return;
+            }
+            
+            if (item.type === 'boss') {
+                spawnBossMonster(item.monsterLevel);
+            } else {
+                spawnNormalMonster(item.monsterLevel);
+            }
+            
+            // 安排下一个怪物生成，或检查队列是否为空
+            // 只有在非暂停状态下才安排
+            if (!isPaused && waveState === 'spawning' && spawnQueue.length > 0) {
+                spawnTimer = setTimeout(() => spawnNextMonster(interval), interval);
+            }
+        }
+
+        function spawnNormalMonster(monsterLevel) {
+            // 【强制防护1】如果已暂停，绝对不生成怪物
+            if (isPaused) {
+                console.log('🛑 游戏已暂停，跳过生成普通怪物');
+                return;
+            }
+            
+            // 【强制防护2】双保险检查
+            if (isPaused) {
+                console.log('🛑 游戏已暂停（二次检查），跳过生成普通怪物');
+                return;
+            }
+            
+            // 获取当前关卡可用的怪物类型
+            const currentLevel = parseInt(localStorage.getItem('currentLevel')) || 1;
+            const unlockCount = LEVEL_UNLOCK_CONFIG.monsters[currentLevel] || 4;
+            const availableTypes = ['🗑️', '💨', '💀', '🦠', '🧴', '🔋', '🛢️', '☢️'].slice(0, unlockCount);
+            
+            const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            const baseInfo = monsterInfo[type];
+            const levelConfig = monsterLevelConfig[monsterLevel];
+            
+            const scaledHp = Math.floor(baseInfo.hp * levelConfig.hpMultiplier);
+            const scaledReward = Math.floor(baseInfo.reward * levelConfig.rewardMultiplier);
+            
+            const info = {
+                ...baseInfo,
+                hp: scaledHp,
+                reward: scaledReward
+            };
+            
+            console.log('✅ 生成怪物:', type, '等级:', monsterLevel, '生命:', scaledHp, '奖励:', scaledReward, '当前关卡:', currentLevel, '可用怪物:', unlockCount);
+            
+            const monster = createMonsterElement(type, info, monsterLevel);
+            document.querySelector('.center-battle').appendChild(monster);
+            monsters.push(monster);
+            
+            moveMonster(monster);
+        }
+
+        function spawnBossMonster(monsterLevel) {
+            // 【强制防护1】如果已暂停，绝对不生成Boss
+            if (isPaused) {
+                console.log('🛑 游戏已暂停，跳过生成Boss');
+                return;
+            }
+            
+            // 【强制防护2】双保险检查
+            if (isPaused) {
+                console.log('🛑 游戏已暂停（二次检查），跳过生成Boss');
+                return;
+            }
+            
+            console.log('✅ 生成Boss怪物!');
+            bossSpawned = true;
+            
+            const bossType = '👹';
+            const baseInfo = monsterInfo[bossType];
+            const levelConfig = monsterLevelConfig[monsterLevel];
+            const scaledHp = Math.floor(baseInfo.hp * levelConfig.hpMultiplier);
+            const scaledReward = Math.floor(baseInfo.reward * levelConfig.rewardMultiplier);
+            
+            const info = {
+                ...baseInfo,
+                hp: scaledHp,
+                reward: scaledReward
+            };
+            
+            const monster = createMonsterElement(bossType, info, monsterLevel);
+            monster.style.zIndex = '100';
+            monster.classList.add('boss');
+            monster.dataset.isBoss = 'true';
+            document.querySelector('.center-battle').appendChild(monster);
+            monsters.push(monster);
+            
+            moveMonster(monster);
+        }
+
+        function startWaveCompleteCheck() {
+            if (waveCompleteTimer) {
+                clearInterval(waveCompleteTimer);
+            }
+            
+            waveCompleteTimer = setInterval(checkWaveComplete, 500);
+        }
+
+        function stopWaveCompleteCheck() {
+            if (waveCompleteTimer) {
+                clearInterval(waveCompleteTimer);
+                waveCompleteTimer = null;
+            }
+        }
+
+        function checkWaveComplete() {
+            // 这个函数现在只被怪物死亡时的即时检查调用
+            // 独立的波次切换完全由 waveCheckInterval 定时器处理
+            
+            const config = waveConfig[currentWave];
+            const hasBoss = config && config.hasBoss;
+            
+            // 对于有Boss的波次，额外检查
+            if (hasBoss) {
+                if (!bossSpawned || !bossKilled) {
+                    return;
+                }
+            }
+            
+            // 如果波次已完成，触发切换
+            if (spawnQueue.length === 0 && monsters.length === 0) {
+                console.log('⚡ checkWaveComplete 触发下一波');
+                stopWaveCompleteCheck();
+                currentWave++;
+                if (currentWave > totalWaves) {
+                    showVictory();
+                } else {
+                    startWave();
+                }
+            }
+        }
+
+        function showVictory() {
+            console.log('游戏胜利!');
+            isPaused = true;
+            
+            stopWaveCompleteCheck();
+            if (spawnTimer) {
+                clearTimeout(spawnTimer);
+                spawnTimer = null;
+            }
+            
+            // 清理塔攻击定时器
+            if (towerAttackInterval) {
+                clearInterval(towerAttackInterval);
+                towerAttackInterval = null;
+            }
+            
+            localStorage.setItem('battleResult', JSON.stringify({
+                victory: true,
+                waves: currentWave - 1,
+                lives: lives,
+                gold: gold
+            }));
+            
+            // 跳转到独立的胜利页面
+            window.location.href = 'victory.html';
+        }
+
+        function updateWaveDisplay() {
+            const wavePanel = document.querySelector('.wave-panel');
+            if (wavePanel) {
+                wavePanel.textContent = '🌊 第' + currentWave + '波/' + totalWaves;
+            }
+        }
+
+        function addGold(amount) {
+            gold += amount;
+            console.log('金币增加:', amount, '当前金币:', gold);
+            updateGoldDisplay();
+        }
+
+        function updateGoldDisplay() {
+            const goldPanel = document.querySelector('.gold-panel');
+            console.log('更新金币显示 - 当前金币:', gold, '面板元素:', goldPanel, '面板内容:', goldPanel ? goldPanel.textContent : 'null');
+            if (goldPanel) {
+                goldPanel.textContent = '💰 ' + gold;
+                console.log('更新后面板内容:', goldPanel.textContent);
+            }
+        }
+
+        function moveMonster(monster) {
+            let x = 8;
+            const y = parseFloat(monster.dataset.y);
+            const interval = setInterval(() => {
+                if (isPaused) return;
+
+                const now = Date.now();
+                const isSlowed = parseInt(monster.dataset.slowed) === 1 && now < parseInt(monster.dataset.slowEnd);
+                const speed = isSlowed ? 0.15 : 0.3;
+                
+                if (isSlowed) {
+                    monster.classList.add('slowed');
+                } else {
+                    monster.classList.remove('slowed');
+                }
+                
+                x += speed;
+                monster.style.left = x + '%';
+                monster.dataset.x = x.toString();
+
+                if (x >= 100) {
+                    clearInterval(interval);
+                    const isBoss = monster.dataset.isBoss === 'true';
+                    monster.remove();
+                    monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                    
+                    // 如果是Boss逃离，标记并游戏失败
+                    if (isBoss) {
+                        console.log('Boss逃离！游戏失败！');
+                        bossEscaped = true;
+                        isPaused = true;
+                        window.location.href = 'gameover.html';
+                        return;
+                    }
+                    
+                    loseLife();
+                    return;
+                }
+
+                if (checkWallCollision(x, y)) {
+                    const isBoss = monster.dataset.isBoss === 'true';
+                    
+                    // 只有非Boss怪物会被墙壁阻挡
+                    if (!isBoss) {
+                        clearInterval(interval);
+                        monster.remove();
+                        monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        return;
+                    }
+                    
+                    // Boss可以穿过墙壁，继续移动，不做任何处理
+                }
+            }, 50);
+
+            monster.dataset.moveInterval = interval;
+        }
+
+        function checkWallCollision(xPercent, yPercent) {
+            const wallCells = document.querySelectorAll('.wall-cell.placed');
+            if (wallCells.length === 0) return false;
+
+            for (const cell of wallCells) {
+                const cellRect = cell.getBoundingClientRect();
+                const centerX = window.innerWidth * (xPercent / 100);
+                const centerY = window.innerHeight * (yPercent / 100);
+
+                if (centerX >= cellRect.left && 
+                    centerX <= cellRect.right &&
+                    centerY >= cellRect.top && 
+                    centerY <= cellRect.bottom) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function loseLife() {
+            lives--;
+            const hearts = document.querySelectorAll('.heart');
+            if (lives >= 0) {
+                hearts[lives].classList.add('lost');
+                hearts[lives].style.animation = 'heartBreak 0.3s ease-out';
+            }
+            
+            if (lives <= 0) {
+                setTimeout(() => {
+                    window.location.href = 'gameover.html';
+                }, 300);
+            }
+        }
+
+        function startTowerAttacks() {
+            if (towerAttackInterval) {
+                clearInterval(towerAttackInterval);
+            }
+            if (laserCheckInterval) {
+                clearInterval(laserCheckInterval);
+            }
+            
+            towerAttackInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                // 缓存DOM查询结果
+                const wallCells = document.querySelectorAll('.wall-cell.placed');
+                const cellsArray = Array.from(wallCells);
+                
+                cellsArray.forEach((cell) => {
+                    const towerType = cell.dataset.towerType;
+                    if (!towerType) return;
+                    
+                    const towerEmoji = emojis[towerType];
+                    if (!towerEmoji || !towerInfo[towerEmoji]) return;
+                    
+                    const baseInfo = towerInfo[towerEmoji];
+                    const towerId = cell.dataset.id;
+                    const level = window.towerLevels[towerId] || 1;
+                    const speedMultiplier = Math.pow(2, level - 1);
+                    const actualInterval = Math.max(baseInfo.interval / speedMultiplier, 200);
+                    
+                    const lastAttackTime = cell.dataset.lastAttackTime ? parseInt(cell.dataset.lastAttackTime) : 0;
+                    const now = Date.now();
+                    
+                    if (now - lastAttackTime >= actualInterval) {
+                        cell.dataset.lastAttackTime = now;
+                        attackFromTower(cell, towerEmoji, baseInfo);
+                    }
+                });
+            }, 50);
+            
+            laserCheckInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                if (monsters.length === 0) {
+                    document.querySelectorAll('.water-laser').forEach(laser => laser.remove());
+                }
+            }, 50);
+            
+            burnEffectInterval = setInterval(() => {
+                if (isPaused) return;
+                
+                const now = Date.now();
+                
+                for (let i = monsters.length - 1; i >= 0; i--) {
+                    const monster = monsters[i];
+                    const burnStacks = parseInt(monster.dataset.burnStacks) || 0;
+                    const burnEndTime = parseInt(monster.dataset.burnEndTime) || 0;
+                    
+                    if (burnStacks > 0 && now < burnEndTime) {
+                        // 计算灼烧伤害：每层5点伤害/秒
+                        const damagePerSecond = burnStacks * 5;
+                        monster.dataset.hp = parseInt(monster.dataset.hp) - damagePerSecond;
+                        
+                        if (parseInt(monster.dataset.hp) <= 0) {
+                            if (monster.dataset.moveInterval) {
+                                clearInterval(parseInt(monster.dataset.moveInterval));
+                            }
+                            addGold(parseInt(monster.dataset.reward));
+                            
+                            if (monster.dataset.isBoss === 'true') {
+                                bossKilled = true;
+                                console.log('Boss被击杀！');
+                            }
+                            
+                            monster.remove();
+                            monsters.splice(i, 1);
+                        }
+                    } else if (burnStacks > 0 && now >= burnEndTime) {
+                        // 灼烧效果结束
+                        monster.dataset.burnStacks = '0';
+                        monster.classList.remove('burning');
+                    }
+                }
+            }, 1000);
+        }
+
+        function attackFromTower(cell, emoji, info) {
+            if (!cell.classList.contains('placed')) {
+                console.log('塔未放置，跳过攻击');
+                return;
+            }
+            
+            if (!info) {
+                console.log('塔信息不存在:', emoji);
+                return;
+            }
+            
+            if (monsters.length === 0) return;
+            
+            const rect = cell.getBoundingClientRect();
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            
+            const towerCenterX = rect.left - containerRect.left + rect.width / 2;
+            const towerCenterY = rect.top - containerRect.top + rect.height / 2;
+            
+            const towerId = cell.dataset.id;
+            const level = window.towerLevels[towerId] || 1;
+            const damageMultiplier = Math.pow(2, level - 1);
+            
+            if (info.type === 'rainbow') {
+                if (activeRainbowTowers.has(towerId)) return;
+                activeRainbowTowers.add(towerId);
+            }
+            
+            if (info.type === 'bomb') {
+                if (activeBombTowers.has(towerId)) return;
+                activeBombTowers.add(towerId);
+            }
+            
+            const targetMonster = findNearestMonster(towerCenterX, towerCenterY);
+            
+            let startX, startY;
+            
+            const barrelLength = Math.min(rect.width, rect.height) * 0.45;
+            
+            if (targetMonster) {
+                const monRect = targetMonster.getBoundingClientRect();
+                const targetX = monRect.left - containerRect.left + monRect.width / 2;
+                const targetY = monRect.top - containerRect.top + monRect.height / 2;
+                
+                rotateTowerTowardsTarget(cell, targetX, targetY);
+                
+                let angle = Math.atan2(targetY - towerCenterY, targetX - towerCenterX);
+                
+                startX = towerCenterX + Math.cos(angle) * barrelLength;
+                startY = towerCenterY + Math.sin(angle) * barrelLength;
+            } else {
+                const defaultAngle = Math.PI;
+                startX = towerCenterX + Math.cos(defaultAngle) * barrelLength;
+                startY = towerCenterY + Math.sin(defaultAngle) * barrelLength;
+                
+                const cannonGroup = cell.querySelector('.tower-cannon-group');
+                if (cannonGroup) {
+                    cannonGroup.style.transform = `rotate(${defaultAngle * 180 / Math.PI}deg)`;
+                }
+            }
+            
+            if (info.type === 'ray') {
+                shootRay(startX, startY, targetMonster, emoji, info, damageMultiplier);
+            } else if (info.type === 'laser') {
+                shootLaser(startX, startY, targetMonster, cell, emoji, info, damageMultiplier);
+            } else if (info.type === 'arc') {
+                shootArcProjectile(startX, startY, targetMonster, cell, emoji, info, towerId, damageMultiplier);
+            } else if (info.type === 'bomb') {
+                throwBomb(startX, startY, targetMonster, emoji, info, towerId, damageMultiplier);
+            } else if (info.type === 'rainbow') {
+                shootRainbow(startX, startY, targetMonster, emoji, info, towerId, damageMultiplier);
+            } else if (info.type === 'splash') {
+                shootSplash(startX, startY, targetMonster, emoji, info, towerId, damageMultiplier);
+            } else if (info.type === 'lightning') {
+                shootLightning(startX, startY, targetMonster, emoji, info, damageMultiplier);
+            } else if (info.type === 'pierce') {
+                shootPierce(startX, startY, targetMonster, emoji, info, damageMultiplier);
+            }
+        }
+
+        function rotateTowerTowardsTarget(cell, targetX, targetY) {
+            const cannonGroup = cell.querySelector('.tower-cannon-group');
+            if (!cannonGroup) return;
+            
+            const rect = cell.getBoundingClientRect();
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const cellCenterX = rect.left - containerRect.left + rect.width / 2;
+            const cellCenterY = rect.top - containerRect.top + rect.height / 2;
+            
+            let targetAngle = Math.atan2(targetY - cellCenterY, targetX - cellCenterX) * 180 / Math.PI;
+            
+            const currentTransform = cannonGroup.style.transform;
+            let currentAngle = 180;
+            if (currentTransform) {
+                const match = currentTransform.match(/rotate\(([\d.-]+)deg\)/);
+                if (match) {
+                    currentAngle = parseFloat(match[1]);
+                }
+            }
+            
+            let angleDiff = targetAngle - currentAngle;
+            while (angleDiff > 180) angleDiff -= 360;
+            while (angleDiff < -180) angleDiff += 360;
+            
+            const newAngle = currentAngle + angleDiff;
+            
+            cannonGroup.style.transition = 'transform 0.2s ease-out';
+            cannonGroup.style.transform = `rotate(${newAngle}deg)`;
+        }
+
+        function findNearestMonster(x, y) {
+            let nearest = null;
+            let minDistance = Infinity;
+            
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+                const monX = monRect.left - containerRect.left + monRect.width / 2;
+                const monY = monRect.top - containerRect.top + monRect.height / 2;
+                const distance = Math.sqrt(Math.pow(monX - x, 2) + Math.pow(monY - y, 2));
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = monster;
+                }
+            });
+            
+            return nearest;
+        }
+
+        function shootLaser(towerX, towerY, targetMonster, cell, emoji, info, damageMultiplier = 1) {
+            const container = document.querySelector('.battle-container');
+            let laser = document.querySelector('.water-laser-' + cell.dataset.wall);
+            
+            if (!targetMonster || monsters.length === 0) {
+                if (laser) {
+                    laser.remove();
+                }
+                return;
+            }
+            
+            const containerRect = container.getBoundingClientRect();
+            
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - towerX;
+            const dy = targetY - towerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            if (!laser) {
+                laser = document.createElement('div');
+                laser.className = 'water-laser';
+                laser.classList.add('water-laser-' + cell.dataset.wall);
+                container.appendChild(laser);
+            }
+            
+            laser.style.left = towerX + 'px';
+            laser.style.top = towerY + 'px';
+            laser.style.width = distance + 'px';
+            laser.style.transform = `rotate(${angle}deg)`;
+            
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            targetMonster.dataset.hp = parseInt(targetMonster.dataset.hp) - actualDamage;
+            
+            if (info.name === 'water') {
+                targetMonster.dataset.slowed = '1';
+                targetMonster.dataset.slowEnd = Date.now() + 3000;
+            }
+            
+            createLaserHitEffect(targetX, targetY);
+            
+            if (parseInt(targetMonster.dataset.hp) <= 0) {
+                console.log('怪物被击杀:', targetMonster.dataset.type, '奖励:', targetMonster.dataset.reward);
+                if (targetMonster.dataset.moveInterval) {
+                    clearInterval(parseInt(targetMonster.dataset.moveInterval));
+                }
+                addGold(parseInt(targetMonster.dataset.reward));
+                
+                if (targetMonster.dataset.isBoss === 'true') {
+                    bossKilled = true;
+                    console.log('Boss被击杀！');
+                }
+                
+                targetMonster.remove();
+                monsters = monsters.filter(m => m.dataset.id !== targetMonster.dataset.id);
+                
+                // 立即检查波次是否完成
+                console.log('怪物死亡后检查: 场上剩余怪物数=', monsters.length, '当前状态=', waveState);
+                if (waveState === 'waiting_for_complete' && monsters.length === 0) {
+                    console.log('⚡ 怪物死亡触发波次检查!');
+                    checkWaveComplete();
+                }
+                
+                if (laser) {
+                    laser.remove();
+                }
+            }
+        }
+
+        function createLaserHitEffect(x, y) {
+            const container = document.querySelector('.battle-container');
+            const hitEffect = document.createElement('div');
+            hitEffect.className = 'laser-hit';
+            hitEffect.style.left = x + 'px';
+            hitEffect.style.top = y + 'px';
+            
+            const hitCore = document.createElement('div');
+            hitCore.className = 'laser-hit-core';
+            hitEffect.appendChild(hitCore);
+            
+            for (let i = 0; i < 4; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'laser-hit-spark';
+                const angle = (i * 90 + Math.random() * 20) * Math.PI / 180;
+                const distance = 15 + Math.random() * 10;
+                spark.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+                spark.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
+                spark.style.left = '50%';
+                spark.style.top = '50%';
+                hitEffect.appendChild(spark);
+            }
+            
+            container.appendChild(hitEffect);
+            
+            setTimeout(() => {
+                hitEffect.remove();
+            }, 300);
+        }
+
+        function shootArcProjectile(x, y, targetMonster, cell, emoji, info, towerId, damageMultiplier = 1) {
+            if (!targetMonster) return;
+            
+            const cannonGroup = cell.querySelector('.tower-cannon-group');
+            if (cannonGroup) {
+                const currentTransform = cannonGroup.style.transform || '';
+                const rotateMatch = currentTransform.match(/rotate\(([\d.-]+)deg\)/);
+                const rotateValue = rotateMatch ? `rotate(${rotateMatch[1]}deg)` : 'rotate(180deg)';
+                
+                cannonGroup.style.transition = 'transform 0.05s ease-out';
+                cannonGroup.style.transform = `${rotateValue} scale(0.85)`;
+                
+                setTimeout(() => {
+                    cannonGroup.style.transition = 'transform 0.15s ease-out';
+                    cannonGroup.style.transform = rotateValue;
+                }, 100);
+            }
+            
+            const container = document.querySelector('.battle-container');
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'arc-projectile';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            projectile.dataset.damage = actualDamage;
+            projectile.dataset.targetId = targetMonster.dataset.id;
+            container.appendChild(projectile);
+            
+            const startTime = performance.now();
+            const duration = 700;
+            
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                let progress = Math.min(elapsed / duration, 1);
+                progress = 1 - Math.pow(1 - progress, 2);
+                
+                const currentX = x + (targetX - x) * progress;
+                const arcHeight = -Math.abs(targetX - x) * 0.4 * Math.sin(progress * Math.PI);
+                const currentY = y + (targetY - y) * progress + arcHeight;
+                
+                projectile.style.left = currentX + 'px';
+                projectile.style.top = currentY + 'px';
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    projectile.remove();
+                    
+                    const explosion = document.createElement('div');
+                    explosion.className = 'arc-explosion';
+                    explosion.style.left = targetX + 'px';
+                    explosion.style.top = targetY + 'px';
+                    
+                    const core = document.createElement('div');
+                    core.className = 'explosion-core';
+                    explosion.appendChild(core);
+                    
+                    const shockwave = document.createElement('div');
+                    shockwave.className = 'explosion-shockwave';
+                    explosion.appendChild(shockwave);
+                    
+                    for (let i = 0; i < 8; i++) {
+                        const spark = document.createElement('div');
+                        spark.className = 'explosion-spark';
+                        const angle = (i / 8) * Math.PI * 2;
+                        const distance = 40 + Math.random() * 30;
+                        spark.style.left = '50%';
+                        spark.style.top = '50%';
+                        spark.style.setProperty('--spark-x', Math.cos(angle) * distance + 'px');
+                        spark.style.setProperty('--spark-y', Math.sin(angle) * distance + 'px');
+                        spark.style.animation = `sparkFly 0.3s ease-out ${Math.random() * 0.1}s forwards`;
+                        spark.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+                        explosion.appendChild(spark);
+                    }
+                    
+                    container.appendChild(explosion);
+                    
+                    setTimeout(() => explosion.remove(), 500);
+                    
+                    const updatedTarget = document.querySelector(`[data-id="${targetMonster.dataset.id}"]`);
+                    if (updatedTarget) {
+                        updatedTarget.dataset.hp = parseInt(updatedTarget.dataset.hp) - actualDamage;
+                        
+                        if (parseInt(updatedTarget.dataset.hp) <= 0) {
+                            console.log('怪物被击杀:', updatedTarget.dataset.type, '奖励:', updatedTarget.dataset.reward);
+                            if (updatedTarget.dataset.moveInterval) {
+                                clearInterval(parseInt(updatedTarget.dataset.moveInterval));
+                            }
+                            addGold(parseInt(updatedTarget.dataset.reward));
+                            
+                            if (updatedTarget.dataset.isBoss === 'true') {
+                                bossKilled = true;
+                                console.log('Boss被击杀！');
+                            }
+                            
+                            updatedTarget.remove();
+                            monsters = monsters.filter(m => m.dataset.id !== updatedTarget.dataset.id);
+                        }
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        function shootRay(x, y, targetMonster, emoji, info, damageMultiplier = 1) {
+            if (!targetMonster) return;
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.textContent = info.name === 'water' ? '💧' : '✦';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            projectile.dataset.damage = actualDamage;
+            projectile.dataset.type = info.type;
+            
+            document.querySelector('.battle-container').appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 12;
+            const vy = (dy / distance) * 12;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left);
+                const currentY = parseFloat(projectile.style.top);
+                projectile.style.left = (currentX + vx) + 'px';
+                projectile.style.top = (currentY + vy) + 'px';
+                
+                if (currentX > containerRect.width || currentX < 0 || currentY > containerRect.height || currentY < 0) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    return;
+                }
+                
+                checkMonsterHit(projectile, info);
+            }, 15);
+        }
+
+        function throwBomb(x, y, targetMonster, emoji, info, towerId, damageMultiplier = 1) {
+            if (!targetMonster) {
+                activeBombTowers.delete(towerId);
+                return;
+            }
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.textContent = '💥';
+            projectile.style.left = x + 'px';
+            projectile.style.top = y + 'px';
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            projectile.dataset.damage = actualDamage;
+            projectile.dataset.type = 'bomb';
+            projectile.dataset.active = '1';
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 8;
+            const vy = (dy / distance) * 8;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left);
+                const currentY = parseFloat(projectile.style.top);
+                projectile.style.left = (currentX + vx) + 'px';
+                projectile.style.top = (currentY + vy) + 'px';
+                
+                if (currentX > containerRect.width + 50 || currentX < -50 || currentY > containerRect.height + 50 || currentY < -50) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    activeBombTowers.delete(towerId);
+                    return;
+                }
+                
+                checkBombHit(projectile, info, towerId, interval);
+            }, 15);
+        }
+
+        function shootPierce(x, y, targetMonster, emoji, info, damageMultiplier = 1) {
+            if (!targetMonster) return;
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // 计算垂直于飞行方向的偏移，用于双子弹
+            const perpX = -dy / distance * 15;
+            const perpY = dx / distance * 15;
+            
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            
+            // 创建单颗穿透子弹
+            function createPierceBullet(startX, startY, velX, velY) {
+                const projectile = document.createElement('div');
+                projectile.className = 'projectile pierce-projectile';
+                projectile.style.left = (startX - 8) + 'px';
+                projectile.style.top = (startY - 8) + 'px';
+                projectile.style.width = '16px';
+                projectile.style.height = '16px';
+                projectile.style.position = 'absolute';
+                projectile.style.pointerEvents = 'none';
+                projectile.style.zIndex = '100';
+                projectile.dataset.damage = actualDamage;
+                projectile.dataset.type = 'pierce';
+                projectile.dataset.hitCount = '0';
+                projectile.dataset.hitMonsterIds = '';
+                
+                projectile.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <circle cx="8" cy="8" r="5" fill="#5ab8cc"/>
+                        <circle cx="8" cy="8" r="3" fill="#8ae0f0"/>
+                        <circle cx="7" cy="7" r="1.5" fill="#ffffff" opacity="0.7"/>
+                    </svg>
+                `;
+                
+                document.querySelector('.battle-container').appendChild(projectile);
+                projectiles.push(projectile);
+                
+                let frameCount = 0;
+                
+                const interval = setInterval(() => {
+                    if (isPaused) return;
+                    
+                    const currentX = parseFloat(projectile.style.left) + 8;
+                    const currentY = parseFloat(projectile.style.top) + 8;
+                    const newX = currentX + velX;
+                    const newY = currentY + velY;
+                    
+                    projectile.style.left = (newX - 8) + 'px';
+                    projectile.style.top = (newY - 8) + 'px';
+                    
+                    // 检查是否飞出边界
+                    if (newX > containerRect.width + 50 || newX < -50 || 
+                        newY > containerRect.height + 50 || newY < -50) {
+                        clearInterval(interval);
+                        projectile.remove();
+                        projectiles = projectiles.filter(p => p !== projectile);
+                        return;
+                    }
+                    
+                    frameCount++;
+                    // 每3帧检测一次碰撞，避免同一位置多次检测
+                    if (frameCount % 3 === 0) {
+                        checkPierceHit(projectile, actualDamage, interval);
+                    }
+                }, 18);
+            }
+            
+            // 计算速度
+            const speed = 7;
+            const vx = (dx / distance) * speed;
+            const vy = (dy / distance) * speed;
+            
+            // 发射两颗子弹，分开一点距离
+            createPierceBullet(x + perpX, y + perpY, vx, vy);
+            createPierceBullet(x - perpX, y - perpY, vx, vy);
+        }
+
+        function checkPierceHit(projectile, originalDamage, interval) {
+            const projRect = projectile.getBoundingClientRect();
+            const hitCount = parseInt(projectile.dataset.hitCount) || 0;
+            const hitMonsterIds = projectile.dataset.hitMonsterIds.split(',').filter(id => id);
+            
+            // 穿透两次后立即移除
+            if (hitCount >= 2) {
+                // 创建消失特效
+                const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+                const hitX = projRect.left - containerRect.left + projRect.width / 2;
+                const hitY = projRect.top - containerRect.top + projRect.height / 2;
+                createPierceEndEffect(hitX, hitY);
+                
+                clearInterval(interval);
+                projectile.remove();
+                projectiles = projectiles.filter(p => p !== projectile);
+                return;
+            }
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const monster = monsters[i];
+                const monsterId = monster.dataset.id || i;
+                
+                // 跳过已经击中过的怪物
+                if (hitMonsterIds.includes(monsterId.toString())) continue;
+                
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left && 
+                    projRect.top < monRect.bottom && 
+                    projRect.bottom > monRect.top) {
+                    
+                    const hitX = projRect.left - containerRect.left + projRect.width / 2;
+                    const hitY = projRect.top - containerRect.top + projRect.height / 2;
+                    
+                    // 创建击中效果
+                    createPierceHitEffect(hitX, hitY, hitCount);
+                    
+                    // 第一次100%伤害，第二次30%伤害
+                    const damage = hitCount === 0 ? originalDamage : Math.floor(originalDamage * 0.3);
+                    monster.dataset.hp = parseInt(monster.dataset.hp) - damage;
+                    
+                    // 更新击中计数和击中的怪物ID列表
+                    projectile.dataset.hitCount = (hitCount + 1).toString();
+                    projectile.dataset.hitMonsterIds = hitMonsterIds.concat([monsterId]).join(',');
+                    
+                    if (parseInt(monster.dataset.hp) <= 0) {
+                        console.log('怪物被穿透击杀:', monster.dataset.type, '奖励:', monster.dataset.reward);
+                        if (monster.dataset.moveInterval) {
+                            clearInterval(parseInt(monster.dataset.moveInterval));
+                        }
+                        addGold(parseInt(monster.dataset.reward));
+                        
+                        if (monster.dataset.isBoss === 'true') {
+                            bossKilled = true;
+                            console.log('Boss被击杀！');
+                        }
+                        
+                        monster.remove();
+                        monsters.splice(i, 1);
+                    }
+                    
+                    // 穿透两次后立即移除
+                    if (hitCount + 1 >= 2) {
+                        // 创建消失特效
+                        createPierceEndEffect(hitX, hitY);
+                        
+                        clearInterval(interval);
+                        projectile.remove();
+                        projectiles = projectiles.filter(p => p !== projectile);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function createPierceHitEffect(x, y, hitCount) {
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (x - 10) + 'px';
+            effect.style.top = (y - 10) + 'px';
+            effect.style.width = '20px';
+            effect.style.height = '20px';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '1000';
+            effect.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="4" fill="#8ae0f0" opacity="1">
+                        <animate attributeName="r" from="4" to="9" dur="0.3s" fill="freeze"/>
+                        <animate attributeName="opacity" from="1" to="0" dur="0.3s" fill="freeze"/>
+                    </circle>
+                    <circle cx="10" cy="10" r="2" fill="#ffffff" opacity="0.8">
+                        <animate attributeName="r" from="2" to="6" dur="0.25s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.8" to="0" dur="0.25s" fill="freeze"/>
+                    </circle>
+                </svg>
+            `;
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 350);
+        }
+
+        function createPierceEndEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (x - 12) + 'px';
+            effect.style.top = (y - 12) + 'px';
+            effect.style.width = '24px';
+            effect.style.height = '24px';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '1000';
+            effect.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="7" fill="none" stroke="#5ab8cc" stroke-width="2" opacity="1">
+                        <animate attributeName="r" from="7" to="12" dur="0.35s" fill="freeze"/>
+                        <animate attributeName="opacity" from="1" to="0" dur="0.35s" fill="freeze"/>
+                    </circle>
+                    <circle cx="12" cy="12" r="4" fill="#8ae0f0" opacity="0.7">
+                        <animate attributeName="r" from="4" to="8" dur="0.3s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.7" to="0" dur="0.3s" fill="freeze"/>
+                    </circle>
+                </svg>
+            `;
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 600);
+        }
+
+        function shootRainbow(x, y, targetMonster, emoji, info, towerId, damageMultiplier = 1) {
+            if (!targetMonster) {
+                activeRainbowTowers.delete(towerId);
+                return;
+            }
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.style.left = (x - 15) + 'px';
+            projectile.style.top = (y - 15) + 'px';
+            projectile.style.width = '30px';
+            projectile.style.height = '30px';
+            projectile.style.position = 'absolute';
+            projectile.style.pointerEvents = 'none';
+            projectile.style.zIndex = '100';
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            projectile.dataset.damage = actualDamage;
+            projectile.dataset.type = 'rainbow';
+            
+            // 创建彩色带刺球SVG - 球体缩小，刺更长
+            projectile.innerHTML = `
+                <svg width="30" height="30" viewBox="0 0 30 30">
+                    <!-- 长刺 -->
+                    <polygon points="15,0 17,9 13,9" fill="#ff6b6b"/>
+                    <polygon points="30,15 21,17 21,13" fill="#ffd93d"/>
+                    <polygon points="15,30 13,21 17,21" fill="#6bcb77"/>
+                    <polygon points="0,15 9,13 9,17" fill="#4d96ff"/>
+                    <!-- 对角长刺 -->
+                    <polygon points="25,5 19,11 21,11" fill="#ff9f43"/>
+                    <polygon points="25,25 19,19 21,19" fill="#a55eea"/>
+                    <polygon points="5,25 11,19 9,19" fill="#ff6b6b"/>
+                    <polygon points="5,5 11,11 9,11" fill="#ffd93d"/>
+                    <!-- 缩小的主体圆球 -->
+                    <circle cx="15" cy="15" r="6" fill="url(#rainbowGradient)"/>
+                    <!-- 高光 -->
+                    <circle cx="13" cy="13" r="2" fill="rgba(255,255,255,0.7)"/>
+                    <!-- 渐变定义 -->
+                    <defs>
+                        <linearGradient id="rainbowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff6b6b"/>
+                            <stop offset="25%" style="stop-color:#ffd93d"/>
+                            <stop offset="50%" style="stop-color:#6bcb77"/>
+                            <stop offset="75%" style="stop-color:#4d96ff"/>
+                            <stop offset="100%" style="stop-color:#a55eea"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            `;
+            
+            const container = document.querySelector('.battle-container');
+            container.appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 8;
+            const vy = (dy / distance) * 8;
+            
+            let rotation = 0;
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left) + 15;
+                const currentY = parseFloat(projectile.style.top) + 15;
+                projectile.style.left = (currentX + vx - 15) + 'px';
+                projectile.style.top = (currentY + vy - 15) + 'px';
+                rotation += 15;
+                projectile.querySelector('svg').style.transform = `rotate(${rotation}deg)`;
+                
+                if (currentX > containerRect.width + 50 || currentX < -50 || currentY > containerRect.height + 50 || currentY < -50) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    activeRainbowTowers.delete(towerId);
+                    return;
+                }
+                
+                checkRainbowHit(projectile, info);
+            }, 15);
+        }
+
+        function shootSplash(x, y, targetMonster, emoji, info, towerId, damageMultiplier = 1) {
+            if (!targetMonster) {
+                return;
+            }
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.style.left = (x - 10) + 'px';
+            projectile.style.top = (y - 10) + 'px';
+            projectile.style.width = '20px';
+            projectile.style.height = '20px';
+            projectile.style.position = 'absolute';
+            projectile.style.pointerEvents = 'none';
+            projectile.style.zIndex = '100';
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            projectile.dataset.damage = actualDamage;
+            projectile.dataset.type = 'splash';
+            
+            // 紫色水弹SVG
+            projectile.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="8" fill="#9b59b6"/>
+                    <circle cx="10" cy="10" r="6" fill="#c39bd3"/>
+                    <circle cx="7" cy="7" r="2" fill="#e8daef"/>
+                </svg>
+            `;
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(projectile);
+            projectiles.push(projectile);
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const dx = targetX - x;
+            const dy = targetY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const vx = (dx / distance) * 10;
+            const vy = (dy / distance) * 10;
+            
+            const interval = setInterval(() => {
+                if (isPaused) return;
+                
+                const currentX = parseFloat(projectile.style.left) + 10;
+                const currentY = parseFloat(projectile.style.top) + 10;
+                projectile.style.left = (currentX + vx - 10) + 'px';
+                projectile.style.top = (currentY + vy - 10) + 'px';
+                
+                if (currentX > containerRect.width + 50 || currentX < -50 || 
+                    currentY > containerRect.height + 50 || currentY < -50) {
+                    clearInterval(interval);
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    return;
+                }
+                
+                checkSplashHit(projectile, info, interval);
+            }, 15);
+        }
+
+        function checkSplashHit(projectile, info, interval) {
+            const projRect = projectile.getBoundingClientRect();
+            const actualDamage = parseInt(projectile.dataset.damage) || info.damage;
+            
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const monster = monsters[i];
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left && 
+                    projRect.top < monRect.bottom && 
+                    projRect.bottom > monRect.top) {
+                    
+                    clearInterval(interval);
+                    
+                    const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+                    const projCenterX = projRect.left - containerRect.left + projRect.width / 2;
+                    const projCenterY = projRect.top - containerRect.top + projRect.height / 2;
+                    
+                    // 创建小爆炸效果
+                    createSplashEffect(projCenterX, projCenterY);
+                    
+                    // 溅射伤害 - 范围攻击
+                    const splashRadius = 50;
+                    monsters.forEach(m => {
+                        const mRect = m.getBoundingClientRect();
+                        const mCenterX = mRect.left - containerRect.left + mRect.width / 2;
+                        const mCenterY = mRect.top - containerRect.top + mRect.height / 2;
+                        const dist = Math.sqrt(Math.pow(mCenterX - projCenterX, 2) + Math.pow(mCenterY - projCenterY, 2));
+                        
+                        if (dist < splashRadius) {
+                            const splashDamage = Math.floor(actualDamage * (1 - dist / splashRadius));
+                            m.dataset.hp = parseInt(m.dataset.hp) - splashDamage;
+                            
+                            // 净化塔减速效果
+                            m.dataset.slowed = '1';
+                            m.dataset.slowEnd = Date.now() + 3000;
+                            
+                            // 净化塔叠加伤害效果 - 类似太阳能塔的灼烧
+                            const currentBurnStacks = parseInt(m.dataset.burnStacks) || 0;
+                            m.dataset.burnStacks = (currentBurnStacks + 1).toString();
+                            m.dataset.burnEndTime = Date.now() + 5000;
+                            
+                            if (parseInt(m.dataset.hp) <= 0) {
+                                console.log('怪物被溅射击杀:', m.dataset.type, '奖励:', m.dataset.reward);
+                                if (m.dataset.moveInterval) {
+                                    clearInterval(parseInt(m.dataset.moveInterval));
+                                }
+                                addGold(parseInt(m.dataset.reward));
+                                
+                                if (m.dataset.isBoss === 'true') {
+                                    bossKilled = true;
+                                    console.log('Boss被击杀！');
+                                }
+                                
+                                m.remove();
+                                const idx = monsters.indexOf(m);
+                                if (idx > -1) monsters.splice(idx, 1);
+                            }
+                        }
+                    });
+                    
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    break;
+                }
+            }
+        }
+
+        function createSplashEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (x - 20) + 'px';
+            effect.style.top = (y - 20) + 'px';
+            effect.style.width = '40px';
+            effect.style.height = '40px';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '1000';
+            effect.innerHTML = `
+                <svg width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="5" fill="#9b59b6" opacity="0.8">
+                        <animate attributeName="r" from="5" to="20" dur="0.3s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.8" to="0" dur="0.3s" fill="freeze"/>
+                    </circle>
+                    <circle cx="20" cy="20" r="3" fill="#c39bd3" opacity="0.9">
+                        <animate attributeName="r" from="3" to="15" dur="0.25s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.9" to="0" dur="0.25s" fill="freeze"/>
+                    </circle>
+                </svg>
+            `;
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 400);
+        }
+
+        function shootLightning(x, y, targetMonster, emoji, info, damageMultiplier = 1) {
+            if (!targetMonster) {
+                return;
+            }
+            
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            const targetRect = targetMonster.getBoundingClientRect();
+            const targetX = targetRect.left - containerRect.left + targetRect.width / 2;
+            const targetY = targetRect.top - containerRect.top + targetRect.height / 2;
+            
+            const actualDamage = Math.floor(info.damage * damageMultiplier);
+            const aoeDamage = Math.floor(actualDamage * 0.3); // 范围伤害为主要伤害的30%
+            const aoeRadius = 100; // 范围半径100像素
+            
+            // 创建主闪电效果
+            const lightning = document.createElement('div');
+            lightning.style.position = 'absolute';
+            lightning.style.pointerEvents = 'none';
+            lightning.style.zIndex = '1000';
+            lightning.innerHTML = `
+                <svg width="100%" height="100%" viewBox="0 0 ${containerRect.width} ${containerRect.height}" style="position:absolute;top:0;left:0;">
+                    <path d="M${x},${y} L${x + (targetX - x) * 0.3},${y + (targetY - y) * 0.3 - 10} L${x + (targetX - x) * 0.5},${y + (targetY - y) * 0.5 + 5} L${x + (targetX - x) * 0.7},${y + (targetY - y) * 0.7 - 8} L${targetX},${targetY}" 
+                          stroke="#9b59b6" stroke-width="4" fill="none" opacity="0.9">
+                        <animate attributeName="opacity" values="0.9;0.3;0.9" dur="0.1s" repeatCount="3"/>
+                    </path>
+                    <path d="M${x},${y} L${x + (targetX - x) * 0.3},${y + (targetY - y) * 0.3 - 10} L${x + (targetX - x) * 0.5},${y + (targetY - y) * 0.5 + 5} L${x + (targetX - x) * 0.7},${y + (targetY - y) * 0.7 - 8} L${targetX},${targetY}" 
+                          stroke="#c39bd3" stroke-width="2" fill="none" opacity="0.8">
+                        <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.1s" repeatCount="3"/>
+                    </path>
+                </svg>
+            `;
+            lightning.style.top = '0px';
+            lightning.style.left = '0px';
+            lightning.style.width = containerRect.width + 'px';
+            lightning.style.height = containerRect.height + 'px';
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(lightning);
+            
+            // 创建主击中效果
+            createHitEffect(targetX, targetY, '#9b59b6');
+            
+            // 主目标伤害
+            targetMonster.dataset.hp = parseInt(targetMonster.dataset.hp) - actualDamage;
+            
+            if (parseInt(targetMonster.dataset.hp) <= 0) {
+                console.log('怪物被闪电击杀:', targetMonster.dataset.type, '奖励:', targetMonster.dataset.reward);
+                if (targetMonster.dataset.moveInterval) {
+                    clearInterval(parseInt(targetMonster.dataset.moveInterval));
+                }
+                addGold(parseInt(targetMonster.dataset.reward));
+                
+                if (targetMonster.dataset.isBoss === 'true') {
+                    bossKilled = true;
+                    console.log('Boss被击杀！');
+                }
+                
+                targetMonster.remove();
+                const idx = monsters.indexOf(targetMonster);
+                if (idx > -1) monsters.splice(idx, 1);
+            }
+            
+            // 范围伤害和落雷效果
+            const nearbyMonsters = [];
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const monster = monsters[i];
+                if (monster === targetMonster) continue; // 跳过主目标
+                
+                const mRect = monster.getBoundingClientRect();
+                const mX = mRect.left - containerRect.left + mRect.width / 2;
+                const mY = mRect.top - containerRect.top + mRect.height / 2;
+                
+                const dist = Math.sqrt(Math.pow(mX - targetX, 2) + Math.pow(mY - targetY, 2));
+                if (dist <= aoeRadius) {
+                    nearbyMonsters.push({ monster, x: mX, y: mY });
+                }
+            }
+            
+            // 对附近怪物造成伤害并创建落雷
+            nearbyMonsters.forEach((item, index) => {
+                setTimeout(() => {
+                    // 创建分支闪电
+                    createBranchLightning(x, y, targetX, targetY, item.x, item.y, containerRect);
+                    
+                    // 击中效果
+                    createHitEffect(item.x, item.y, '#c39bd3');
+                    
+                    // 范围伤害
+                    item.monster.dataset.hp = parseInt(item.monster.dataset.hp) - aoeDamage;
+                    
+                    if (parseInt(item.monster.dataset.hp) <= 0) {
+                        console.log('怪物被落雷击杀:', item.monster.dataset.type, '奖励:', item.monster.dataset.reward);
+                        if (item.monster.dataset.moveInterval) {
+                            clearInterval(parseInt(item.monster.dataset.moveInterval));
+                        }
+                        addGold(parseInt(item.monster.dataset.reward));
+                        
+                        if (item.monster.dataset.isBoss === 'true') {
+                            bossKilled = true;
+                            console.log('Boss被击杀！');
+                        }
+                        
+                        item.monster.remove();
+                        const idx = monsters.indexOf(item.monster);
+                        if (idx > -1) monsters.splice(idx, 1);
+                    }
+                }, 100 + index * 50);
+            });
+            
+            setTimeout(() => lightning.remove(), 350);
+        }
+        
+        function createBranchLightning(x, y, mainTargetX, mainTargetY, branchTargetX, branchTargetY, containerRect) {
+            // 落雷从怪物头上落下
+            const lightningStartY = Math.max(0, branchTargetY - 150); // 从怪物上方150像素处落下
+            
+            const branchLightning = document.createElement('div');
+            branchLightning.style.position = 'absolute';
+            branchLightning.style.pointerEvents = 'none';
+            branchLightning.style.zIndex = '999';
+            
+            // 从上方落下的闪电
+            branchLightning.innerHTML = `
+                <svg width="100%" height="100%" viewBox="0 0 ${containerRect.width} ${containerRect.height}" style="position:absolute;top:0;left:0;">
+                    <!-- 主要落雷 -->
+                    <path d="M${branchTargetX},${lightningStartY} L${branchTargetX + 15},${lightningStartY + 60} L${branchTargetX - 10},${lightningStartY + 100} L${branchTargetX + 8},${lightningStartY + 130} L${branchTargetX},${branchTargetY}" 
+                          stroke="#9b59b6" stroke-width="4" fill="none" opacity="0.9">
+                        <animate attributeName="opacity" values="0.9;0.3;0.9" dur="0.08s" repeatCount="2"/>
+                    </path>
+                    <!-- 外层光晕 -->
+                    <path d="M${branchTargetX},${lightningStartY} L${branchTargetX + 15},${lightningStartY + 60} L${branchTargetX - 10},${lightningStartY + 100} L${branchTargetX + 8},${lightningStartY + 130} L${branchTargetX},${branchTargetY}" 
+                          stroke="#c39bd3" stroke-width="2" fill="none" opacity="0.7">
+                        <animate attributeName="opacity" values="0.7;0.1;0.7" dur="0.08s" repeatCount="2"/>
+                    </path>
+                    <!-- 顶部光晕 -->
+                    <circle cx="${branchTargetX}" cy="${lightningStartY}" r="8" fill="#c39bd3" opacity="0.5">
+                        <animate attributeName="r" values="8;12;8" dur="0.1s" repeatCount="2"/>
+                        <animate attributeName="opacity" values="0.5;0.2;0.5" dur="0.1s" repeatCount="2"/>
+                    </circle>
+                </svg>
+            `;
+            branchLightning.style.top = '0px';
+            branchLightning.style.left = '0px';
+            branchLightning.style.width = containerRect.width + 'px';
+            branchLightning.style.height = containerRect.height + 'px';
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(branchLightning);
+            
+            setTimeout(() => branchLightning.remove(), 250);
+        }
+
+        function createHitEffect(x, y, color = '#ffffff') {
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (x - 15) + 'px';
+            effect.style.top = (y - 15) + 'px';
+            effect.style.width = '30px';
+            effect.style.height = '30px';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '1000';
+            effect.innerHTML = `
+                <svg width="30" height="30" viewBox="0 0 30 30">
+                    <circle cx="15" cy="15" r="3" fill="${color}" opacity="1">
+                        <animate attributeName="r" from="3" to="12" dur="0.3s" fill="freeze"/>
+                        <animate attributeName="opacity" from="1" to="0" dur="0.3s" fill="freeze"/>
+                    </circle>
+                    <circle cx="15" cy="15" r="2" fill="${color}" opacity="0.8">
+                        <animate attributeName="r" from="2" to="8" dur="0.25s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.8" to="0" dur="0.25s" fill="freeze"/>
+                    </circle>
+                    <circle cx="15" cy="15" r="1" fill="${color}" opacity="0.6">
+                        <animate attributeName="r" from="1" to="5" dur="0.2s" fill="freeze"/>
+                        <animate attributeName="opacity" from="0.6" to="0" dur="0.2s" fill="freeze"/>
+                    </circle>
+                </svg>
+            `;
+            
+            const battleArea = document.querySelector('.battle-container');
+            battleArea.appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 400);
+        }
+
+        function checkMonsterHit(projectile, info) {
+            const projRect = projectile.getBoundingClientRect();
+            const actualDamage = parseInt(projectile.dataset.damage) || info.damage;
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                const monster = monsters[i];
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left && 
+                    projRect.top < monRect.bottom && 
+                    projRect.bottom > monRect.top) {
+                    
+                    const hitX = projRect.left - containerRect.left + projRect.width / 2;
+                    const hitY = projRect.top - containerRect.top + projRect.height / 2;
+                    
+                    // 根据塔类型选择颜色
+                    let hitColor = '#ffffff';
+                    if (info.name === 'basic') hitColor = '#7ab87a';
+                    else if (info.name === 'water') hitColor = '#7ac8ff';
+                    else if (info.name === 'light') hitColor = '#ffd85a';
+                    else if (info.name === 'wind') hitColor = '#8ae0f0';
+                    else if (info.name === 'solar') hitColor = '#fff06a';
+                    
+                    createHitEffect(hitX, hitY, hitColor);
+                    
+                    monster.dataset.hp = parseInt(monster.dataset.hp) - actualDamage;
+                    
+                    if (info.type === 'water') {
+                        monster.dataset.slowed = '1';
+                        monster.dataset.slowEnd = Date.now() + 3000;
+                    }
+                    
+                    projectile.remove();
+                    projectiles = projectiles.filter(p => p !== projectile);
+                    
+                    if (parseInt(monster.dataset.hp) <= 0) {
+                        console.log('怪物被击杀:', monster.dataset.type, '奖励:', monster.dataset.reward);
+                        if (monster.dataset.moveInterval) {
+                            clearInterval(parseInt(monster.dataset.moveInterval));
+                        }
+                        addGold(parseInt(monster.dataset.reward));
+                        
+                        if (monster.dataset.isBoss === 'true') {
+                            bossKilled = true;
+                            console.log('Boss被击杀！');
+                        }
+                        
+                        monster.remove();
+                        monsters.splice(i, 1);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function checkBombHit(projectile, info, towerId, interval) {
+            if (parseInt(projectile.dataset.active) === 0) return;
+            
+            const projRect = projectile.getBoundingClientRect();
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            
+            let hit = false;
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left && 
+                    projRect.top < monRect.bottom && 
+                    projRect.bottom > monRect.top) {
+                    hit = true;
+                }
+            });
+            
+            if (hit) {
+                projectile.dataset.active = '0';
+                
+                const projCenterX = projRect.left - containerRect.left + projRect.width / 2;
+                const projCenterY = projRect.top - containerRect.top + projRect.height / 2;
+                
+                createExplosion(projCenterX, projCenterY);
+                
+                monsters.forEach(monster => {
+                    const monRect = monster.getBoundingClientRect();
+                    const monCenterX = monRect.left - containerRect.left + monRect.width / 2;
+                    const monCenterY = monRect.top - containerRect.top + monRect.height / 2;
+                    const distance = Math.sqrt(Math.pow(monCenterX - projCenterX, 2) + Math.pow(monCenterY - projCenterY, 2));
+                    
+                    if (distance < 56) {
+                        const actualDamage = parseInt(projectile.dataset.damage) || info.damage;
+                        monster.dataset.hp = parseInt(monster.dataset.hp) - actualDamage;
+                        
+                        // 添加灼烧效果 - 增加灼烧层数
+                        const currentBurnStacks = parseInt(monster.dataset.burnStacks) || 0;
+                        monster.dataset.burnStacks = (currentBurnStacks + 1).toString();
+                        monster.dataset.burnEndTime = Date.now() + 5000; // 灼烧持续5秒
+                        
+                        // 添加灼烧视觉效果
+                        monster.classList.add('burning');
+                        
+                        if (parseInt(monster.dataset.hp) <= 0) {
+                            if (monster.dataset.moveInterval) {
+                                clearInterval(parseInt(monster.dataset.moveInterval));
+                            }
+                            addGold(parseInt(monster.dataset.reward));
+                            
+                            // 检查是否是Boss
+                            if (monster.dataset.isBoss === 'true') {
+                                bossKilled = true;
+                                console.log('Boss被击杀！');
+                            }
+                            
+                            monster.remove();
+                            monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        }
+                    }
+                });
+                
+                projectile.remove();
+                projectiles = projectiles.filter(p => p !== projectile);
+                activeBombTowers.delete(towerId);
+                if (interval) {
+                    clearInterval(interval);
+                }
+            }
+        }
+
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = (x - 28) + 'px';
+            explosion.style.top = (y - 28) + 'px';
+            explosion.style.width = '56px';
+            explosion.style.height = '56px';
+            
+            document.querySelector('.battle-container').appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+
+        function checkRainbowHit(projectile, info) {
+            const projRect = projectile.getBoundingClientRect();
+            const containerRect = document.querySelector('.battle-container').getBoundingClientRect();
+            
+            if (!projectile.dataset.hitMonsters) {
+                projectile.dataset.hitMonsters = '';
+            }
+            const hitMonsters = projectile.dataset.hitMonsters.split(',').filter(id => id);
+            
+            monsters.forEach(monster => {
+                const monRect = monster.getBoundingClientRect();
+                
+                if (projRect.left < monRect.right && 
+                    projRect.right > monRect.left &&
+                    projRect.top < monRect.bottom &&
+                    projRect.bottom > monRect.top) {
+                    
+                    if (!hitMonsters.includes(monster.dataset.id)) {
+                        const hitX = projRect.left - containerRect.left + projRect.width / 2;
+                        const hitY = projRect.top - containerRect.top + projRect.height / 2;
+                        
+                        // 彩虹塔用彩虹色击中效果，随机选择
+                        const rainbowColors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#9b59b6'];
+                        const hitColor = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+                        createHitEffect(hitX, hitY, hitColor);
+                        
+                        const actualDamage = parseInt(projectile.dataset.damage) || info.damage;
+                        monster.dataset.hp = parseInt(monster.dataset.hp) - actualDamage;
+                        projectile.dataset.hitMonsters += ',' + monster.dataset.id;
+                        
+                        if (parseInt(monster.dataset.hp) <= 0) {
+                            if (monster.dataset.moveInterval) {
+                                clearInterval(parseInt(monster.dataset.moveInterval));
+                            }
+                            addGold(parseInt(monster.dataset.reward));
+                            
+                            // 检查是否是Boss
+                            if (monster.dataset.isBoss === 'true') {
+                                bossKilled = true;
+                                console.log('Boss被击杀！');
+                            }
+                            
+                            monster.remove();
+                            monsters = monsters.filter(m => m.dataset.id !== monster.dataset.id);
+                        }
+                    }
+                }
+            });
+        }
+
+        document.querySelectorAll('.tower-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                if (slot.dataset.towerType) {
+                    document.querySelectorAll('.tower-slot').forEach(s => s.classList.remove('selected'));
+                    slot.classList.add('selected');
+                    selectedSlot = slot;
+                }
+            });
+        });
+
+        document.querySelectorAll('.wall-cell').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                console.log('墙格子点击:', '已放置:', cell.classList.contains('placed'), '塔ID:', cell.dataset.id, '等级:', window.towerLevels[cell.dataset.id], '塔类型:', cell.dataset.towerType);
+                
+                if (cell.classList.contains('placed')) {
+                    e.stopPropagation();
+                    const towerType = cell.dataset.towerType;
+                    const towerEmoji = towerType ? emojis[towerType] : '';
+                    const level = window.towerLevels[cell.dataset.id] || 1;
+                    
+                    console.log('塔信息:', '表情:', towerEmoji, '类型:', towerType, '等级:', level);
+                    
+                    if (selectedTowerCell === cell) {
+                        console.log('关闭菜单');
+                        hideTowerMenu();
+                        return;
+                    }
+                    
+                    selectedTowerCell = cell;
+                    showTowerMenu(cell, towerType, level);
+                } else if (selectedSlot && selectedSlot.dataset.towerType) {
+                    const towerType = selectedSlot.dataset.towerType;
+                    const emoji = emojis[towerType];
+                    
+                    const cost = towerCosts[towerType];
+                    console.log('放置塔:', '类型:', towerType, '费用:', cost, '当前金币:', gold);
+                    
+                    if (cost === undefined || cost === null) {
+                        console.log('塔类型无效:', towerType);
+                        showNotification('❌ 塔类型无效');
+                        return;
+                    }
+                    
+                    if (gold < cost) {
+                        console.log('金币不足!');
+                        showNotification('💰 金币不足！需要 ' + cost + ' 金币');
+                        return;
+                    }
+                    
+                    gold -= cost;
+                    console.log('金币扣除后:', gold);
+                    updateGoldDisplay();
+                    
+                    const towerId = 'tower_' + Date.now();
+                    cell.dataset.id = towerId;
+                    cell.dataset.towerType = towerType;
+                    cell.classList.add('placed');
+                    cell.innerHTML = createTowerEmoji(towerType, false);
+                    window.towerLevels[towerId] = 1;
+                    
+                    updateTowerLevelDisplay(cell, 1);
+                    
+                    selectedSlot.classList.remove('selected');
+                    selectedSlot = null;
+                    hideTowerMenu();
+                } else {
+                    hideTowerMenu();
+                }
+            });
+        });
+
+        function showTowerMenu(cell, towerType, level) {
+            const towerEmoji = towerType ? emojis[towerType] : '';
+            console.log('显示塔菜单:', '塔类型:', towerType, '等级:', level, 'emoji:', towerEmoji);
+            hideTowerMenu();
+            
+            const menu = document.createElement('div');
+            menu.className = 'tower-menu';
+            
+            let upgradeCost = '-';
+            if (level < 3 && towerType) {
+                const costs = {
+                    'basic': { 2: 75, 3: 100 },
+                    'water': { 2: 120, 3: 160 },
+                    'light': { 2: 180, 3: 240 },
+                    'rainbow': { 2: 270, 3: 360 },
+                    'wind': { 2: 225, 3: 300 },
+                    'solar': { 2: 300, 3: 400 },
+                    'purify': { 2: 375, 3: 500 },
+                    'thunder': { 2: 450, 3: 600 }
+                };
+                
+                if (costs[towerType]) {
+                    upgradeCost = costs[towerType][level + 1];
+                    console.log('找到升级费用:', upgradeCost);
+                }
+            }
+            
+            menu.innerHTML = `
+                <div style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #ffd700; font-size: 14px;">等级: ${level}</div>
+                ${level < 3 
+                    ? `<button onclick="upgradeTower('${cell.dataset.id}')" class="upgrade-btn" style="display: block; width: 100%; padding: 8px 12px; margin-bottom: 6px;">升级 (${upgradeCost !== '-' ? upgradeCost + '💰' : '需要金币'})</button>` 
+                    : '<div style="color: gold; text-align: center; font-weight: bold; padding: 8px; background: rgba(255,215,0,0.1); border-radius: 4px;">满级!</div>'}
+                <button onclick="removeTower('${cell.dataset.id}')" class="remove-btn" style="display: block; width: 100%; padding: 8px 12px;">拆除</button>
+            `;
+            
+            const cellRect = cell.getBoundingClientRect();
+            const menuWidth = 130;
+            const menuHeight = 90;
+            
+            let menuLeft = cellRect.left + cellRect.width / 2 - menuWidth / 2;
+            let menuTop = cellRect.bottom + 8;
+            
+            if (menuLeft + menuWidth > window.innerWidth) {
+                menuLeft = window.innerWidth - menuWidth - 10;
+            }
+            if (menuLeft < 10) {
+                menuLeft = 10;
+            }
+            
+            if (menuTop + menuHeight > window.innerHeight) {
+                menuTop = cellRect.top - menuHeight - 8;
+            }
+            
+            menu.style.left = menuLeft + 'px';
+            menu.style.top = menuTop + 'px';
+            
+            document.body.appendChild(menu);
+            console.log('菜单已添加到页面');
+        }
+
+        function hideTowerMenu() {
+            document.querySelectorAll('.tower-menu').forEach(menu => menu.remove());
+            selectedTowerCell = null;
+        }
+
+        function updateTowerLevelDisplay(cell, level) {
+            let levelBadge = cell.querySelector('.tower-level-badge');
+            if (levelBadge) {
+                levelBadge.remove();
+            }
+            
+            if (level > 1) {
+                levelBadge = document.createElement('div');
+                levelBadge.className = 'tower-level-badge';
+                levelBadge.textContent = level;
+                levelBadge.style.cssText = `
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    background: ${level === 2 ? '#ffa500' : '#ffd700'};
+                    color: ${level === 2 ? 'white' : '#000'};
+                    font-size: 10px;
+                    font-weight: bold;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10;
+                `;
+                cell.appendChild(levelBadge);
+            }
+        }
+
+        window.upgradeTower = function(towerId) {
+            console.log('升级塔被调用:', '塔ID:', towerId);
+            const cell = document.querySelector(`.wall-cell[data-id="${towerId}"]`);
+            console.log('找到的格子:', cell);
+            if (!cell) return;
+            
+            const towerType = cell.dataset.towerType;
+            const level = window.towerLevels[towerId] || 1;
+            
+            console.log('塔信息:', '类型:', towerType, '等级:', level);
+            
+            if (level >= 3) {
+                console.log('已达最大等级!');
+                return;
+            }
+            
+            const costs = {
+                'basic': { 2: 75, 3: 100 },
+                'water': { 2: 120, 3: 160 },
+                'light': { 2: 180, 3: 240 },
+                'rainbow': { 2: 270, 3: 360 },
+                'wind': { 2: 225, 3: 300 },
+                'solar': { 2: 300, 3: 400 },
+                'purify': { 2: 375, 3: 500 },
+                'thunder': { 2: 450, 3: 600 }
+            };
+            
+            const upgradeCost = costs[towerType] ? costs[towerType][level + 1] : null;
+            console.log('升级费用:', upgradeCost, '当前金币:', gold);
+            
+            if (!upgradeCost || gold < upgradeCost) {
+                console.log('金币不足或费用无效，无法升级!');
+                showNotification('💰 金币不足！需要 ' + upgradeCost + ' 金币');
+                return;
+            }
+            
+            gold -= upgradeCost;
+            window.towerLevels[towerId] = level + 1;
+            updateGoldDisplay();
+            
+            const newLevel = level + 1;
+            updateTowerLevelDisplay(cell, newLevel);
+            
+            const damageMultiplier = Math.pow(2, newLevel - 1);
+            console.log(`塔升级成功! 等级: ${newLevel}, 伤害倍率: ${damageMultiplier}, 剩余金币: ${gold}`);
+            
+            hideTowerMenu();
+            
+            console.log('升级完成，塔继续攻击中');
+        };
+
+        window.removeTower = function(towerId) {
+            console.log('拆除塔被调用:', '塔ID:', towerId);
+            const cell = document.querySelector(`.wall-cell[data-id="${towerId}"]`);
+            console.log('找到的格子:', cell);
+            if (!cell) return;
+            
+            delete window.towerLevels[towerId];
+            cell.classList.remove('placed');
+            cell.innerHTML = '';
+            cell.removeAttribute('data-id');
+            cell.removeAttribute('data-tower-type');
+            
+            const levelBadge = cell.querySelector('.tower-level-badge');
+            if (levelBadge) {
+                levelBadge.remove();
+            }
+            
+            console.log('塔已拆除');
+            
+            hideTowerMenu();
+        };
+
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.location.href = 'game.html';
+        });
+
+        document.addEventListener('click', (e) => {
+            const menu = document.querySelector('.tower-menu');
+            if (menu && !e.target.closest('.tower-menu')) {
+                hideTowerMenu();
+            }
+        });
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.85);
+                color: #ffd700;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 18px;
+                font-weight: bold;
+                z-index: 2000;
+                animation: fadeInScale 0.3s ease-out;
+                border: 2px solid #ffd700;
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOutScale 0.3s ease-out';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 1000);
+        }
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            pauseGame();
+        });
+
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            resumeGame();
+        });
+
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            window.location.href = 'levels.html';
+        });
+
+        function pauseGame() {
+            isPaused = true;
+            pauseTimestamp = Date.now();
+            document.getElementById('pauseOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            monsters.forEach(monster => {
+                monster.style.animationPlayState = 'paused';
+            });
+            
+            projectiles.forEach(proj => {
+                proj.style.animationPlayState = 'paused';
+            });
+            
+            // 清除所有定时器，确保没有东西在后台运行
+            if (spawnTimer) {
+                clearTimeout(spawnTimer);
+                spawnTimer = null;
+            }
+            if (waveCompleteTimer) {
+                clearInterval(waveCompleteTimer);
+                waveCompleteTimer = null;
+            }
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            pauseTimestamp = null;
+            document.getElementById('pauseOverlay').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            
+            monsters.forEach(monster => {
+                monster.style.animationPlayState = 'running';
+            });
+            
+            projectiles.forEach(proj => {
+                proj.style.animationPlayState = 'running';
+            });
+            
+            // 只有在spawning状态下才恢复怪物生成
+            if (waveState === 'spawning' && spawnQueue.length > 0) {
+                const config = waveConfig[currentWave];
+                spawnTimer = setTimeout(() => spawnNextMonster(config.interval), config.interval);
+            }
+            // 恢复波次完成检查
+            if (waveState === 'waiting_for_complete') {
+                startWaveCompleteCheck();
+            }
+        }
+
+        function restartGame() {
+            window.location.href = 'game.html';
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        function debugNextWave() {
+            console.log('手动触发下一波');
+            waveState = 'idle';
+            currentWave++;
+            startWave();
+        }
+
+        function handleResize() {
+            const battleContainer = document.querySelector('.battle-container');
+            if (battleContainer) {
+                battleContainer.style.minHeight = window.innerHeight - 36 + 'px';
+            }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        
+        handleResize();
+        
+        updateGoldDisplay();
+        loadTowers();
+        setTimeout(startWave, 2000);
+    </script>
+</body>
+</html>
